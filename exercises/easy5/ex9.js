@@ -34,6 +34,4 @@ function countOccurrences(arr) {
   keys.forEach(e => {
     console.log(`${e} => ${results[e]}`);
   })
-
-  // return console.log(results);
 }

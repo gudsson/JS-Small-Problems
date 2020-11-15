@@ -20,3 +20,16 @@ console.log(timeOfDay(-1437) === "00:03");
 console.log(timeOfDay(3000) === "02:00");
 console.log(timeOfDay(800) === "13:20");
 console.log(timeOfDay(-4231) === "01:29");
+
+function timeOfDay(input) {
+  const MINUTES_IN_DAY = 24*60;
+
+  while (input < 0) {
+    input += MINUTES_IN_DAY;
+  }
+
+  let hours = (Math.floor(input / 60) % 24);
+  let minutes = input % 60;
+
+  return `${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}`;
+}
