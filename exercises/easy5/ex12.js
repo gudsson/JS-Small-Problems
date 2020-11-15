@@ -39,7 +39,10 @@ function afterMidnight(time) {
 
 function beforeMidnight(time) {
   let afterMinutes = afterMidnight(time);
-  let results = MINUTES_IN_DAY - afterMinutes;
+  let result = MINUTES_IN_DAY - afterMinutes;
 
-  return (results === 1440) ? 0 : results;
+  // if (result === MINUTES_IN_DAY) {result = 0}
+  result = ((result === MINUTES_IN_DAY) ? 0 : result);
+
+  return result;
 }
