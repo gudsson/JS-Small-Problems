@@ -15,14 +15,28 @@ doubleConsonants('July 4th');        // "JJullyy 4tthh"
 doubleConsonants('');                // ""
 
 function doubleConsonants(str) {
-  // str.split('').map(e => e + e).join('');
-  console.log(str.split('').map(e => e + e).join(''));
+  return console.log(str.split("").map(e => {
+    if (e.toLowerCase() >= 'a' && e.toLowerCase() <= 'z' && !VOWELS.includes(e)) {
+      return e + e;
+    } else {
+      return e;
+    }
+  }).join(""));
 }
 
-function isLowerCaseLetter(char) {
-  return char >= 'a' && char <= 'z';
-}
+// Given solution:
 
-function isUpperCaseLetter(char) {
-  return char >= 'A' && char <= 'Z';
-}
+// function doubleConsonants(string) {
+//   const CONSONANTS = ['b', 'c', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'm',
+//                   'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z'];
+//   let stringArray = [];
+
+//   for (let idx = 0; idx < string.length; idx += 1) {
+//     stringArray.push(string[idx]);
+//     if (CONSONANTS.indexOf(string[idx].toLowerCase()) >= 0) {
+//       stringArray.push(string[idx]);
+//     }
+//   }
+
+//   return stringArray.join("");
+// }
