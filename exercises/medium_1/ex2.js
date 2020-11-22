@@ -19,3 +19,4 @@ function rotateRightmostDigits(num, digits) {
 
   return parseInt(numArr.join(''), 10);
 }
+
