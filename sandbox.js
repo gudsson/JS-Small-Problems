@@ -1,14 +1,8 @@
-function evenValues(array) {
-  let evens = [];
+var uniqueInOrder = function(iterable) {
+  //your code here - remember iterable can be a string or an array
+  if (!Array.isArray(iterable)) iterable = iterable.split("");
 
-  array.forEach(value => {
-    if (value % 2 === 0) {
-      evens.push(value);
-    }
-    array.shift();
-  });
+  return iterable.filter((val, idx) => val !== iterable[idx + 1]);
+};
 
-  return evens;
-}
-
-console.log(evenValues([1, 3, 4, 2, 4, 6, 5, 7, 9, 10, 12]));
+console.log(uniqueInOrder('AAAABBBCCDAABBB'));
