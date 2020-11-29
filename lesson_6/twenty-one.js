@@ -55,13 +55,28 @@
 // it's time to compare the total value of the cards and see who
 // has the highest value.
 const readline = require('readline-sync');
+const HUMAN_PLAYER = 'Player';
+const CPU_PLAYER = 'Dealer';
 const CARD_SUITS = ['heart', 'diamonds', 'spades', 'clubs'];
-const FACE_CARDS = { //includes in-game value
-  J: 10,
-  Q: 10,
-  K: 10,
-  A: 11,
+const FACE_CARDS = {
+  J: 'Jack',
+  Q: 'Queen',
+  K: 'King',
+  A: 'Ace',
 };
+
+function joinOr(array, delimiter = ', ', outro = 'or') {
+  if (array.length < 3) {
+    delimiter = ' ';
+    if (array.length < 2) outro = '';
+  }
+
+  return array.map((value, idx) => {
+    if (idx === array.length - 1) {
+      return `${outro} ${value}`;
+    } else return value;
+  }).join(delimiter).trim();
+}
 
 function buildDeck() {
   let deck = [];
@@ -70,7 +85,7 @@ function buildDeck() {
     for (let idx = 2; idx <= 10; idx += 1) {
       deck.push([String(idx), suit]);
     }
-    Object.keys(FACE_CARDS).forEach(card => {
+    Object.values(FACE_CARDS).forEach(card => {
       deck.push([card, suit]);
     });
   });
@@ -82,12 +97,10 @@ function shuffle(deck) {
   let shuffledDeck = [];
 
   while (deck.length) {
-    let randomIdx = Math.floor(Math.random() * deck.length);
-    let card = deck.splice(randomIdx, 1)[0];
-    console.log(card);
+    let cardIdx = Math.floor(Math.random() * deck.length);
+    let card = deck.splice(cardIdx, 1)[0];
     shuffledDeck.push(card);
   }
-
   return shuffledDeck;
 }
 
@@ -119,65 +132,107 @@ function total(cards) {
 }
 
 function dealCard(deck) {
-  let card = deck.shift();
-  console.log(card);
-  return card;
+  return deck.shift()[0];
 }
 
-function joinOr(array, delimiter = ', ', outro = 'or') {
-  if (array.length < 3) {
-    delimiter = ' ';
-    if (array.length < 2) outro = '';
-  }
-
-  return array.map((value, idx) => {
-    if (idx === array.length - 1) {
-      return `${outro} ${value}`;
-    } else return value;
-  }).join(delimiter).trim();
+function hit(hand, deck) {
+  hand[Object.keys(hand)[0]].push(dealCard(deck));
+  return hand;
 }
 
 function dealCards(deck, numCards) {
   let cards = [];
 
   for (let idx = 0; idx < numCards; idx += 1) {
-    let card = dealCard(deck);
-    console.log('dealt ' + card);
-    cards.push(card);
+    cards.push(dealCard(deck));
   }
-
-  console.log(cards);
 
   return cards;
 }
 
-function displayDealerHand(cards) {
-  console.log(`Dealer has: ${cards} and unknown card`);
+function total2(hand) {
+  let player = Object.keys(hand)[0];
+  let values = hand[player];
+  let sum = 0;
+
+  values.forEach(value => {
+    if (value === "Ace") {
+      sum += 11;
+    } else if (['Jack', 'Queen', 'King'].includes(value)) {
+      sum += 10;
+    } else {
+      sum += Number(value);
+    }
+  });
+
+  // correct for Aces
+  values.filter(value => value === "Ace").forEach(_ => {
+    if (sum > 21) sum -= 10;
+  });
+
+  return sum;
 }
 
-function displayPlayerHand(cards) {
-  console.log(`Player has: ${cards[0][0]} and ${cards[1][0]}`);
+// function playerBusted(hand) {
+//   let score = total2(hand);
+
+//   if (score > 21) {
+//     return true;
+//   } else return false;
+// }
+
+// function dealerBusted(hand) {
+//   let score = total2(hand);
+
+//   if (score > 16) {
+//     return true;
+//   } else return false;
+// }
+
+function busted(hand, deck) {
+  let busted;
+  let player = Object.keys(hand)[0];
+  let total = total2(hand);
+
+  if (player === HUMAN_PLAYER || total2(hand) > 16) {
+    hit(hand, deck);
+  } //else stay
+
+  //TODO: check for busting
+
+  // let player = Object.keys(hand)[0];
+  // hit(hand, deck);
+  // if (player === HUMAN_PLAYER) {
+  //   // busted
+  // }
+  // // console.log(hand);
+  // console.log(total2(hand));
+  // return false;
+}
+
+function displayHand(cards) {
+  let displayCards = Object.values(cards).slice(0)[0];
+  let player = Object.keys(cards)[0];
+  if ((player === CPU_PLAYER) && (displayCards.length === 2)) {
+    displayCards[1] = 'unknown card';
+  }
+
+  console.log(`${player} has: ${joinOr(displayCards,", ","and")}`);
 }
 
 let deck = initializeDeck();
+let dealerHand = { [CPU_PLAYER]: dealCards(deck, 2)};
+let playerHand = { [HUMAN_PLAYER]: dealCards(deck, 2)};
 
-console.log(deck);
+displayHand(dealerHand);
 
-let playerCards = dealCards(deck, 2);
-let dealerCards = dealCards(deck, 2);
-
-console.log(dealerCards);
-displayDealerHand(dealerCards);
-// Dealer has: 5 and unknown card
-// You have: Jack and 6
-
-// console.log(deck);
-
-// while (true) {
-//   console.log("hit or stay?");
-//   let answer = readline.question();
-//   if (answer === 'stay' || busted()) break;
-// }
+while (true) {
+  // hit(playerHand, deck);
+  displayHand(playerHand);
+  console.log("hit or stay?");
+  let answer = readline.question();
+  if (answer === 'stay' || busted(playerHand, deck)) break;
+}
 
 // if (busted()) {
 //   // probably end the game? or ask the user to play again?
