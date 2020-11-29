@@ -7,9 +7,12 @@ const WINNING_LINES = [
   [1, 5, 9], [3, 5, 7]
 ];
 const MATCH_THRESHOLD = 5;
+const MOVES_FIRST_OPTIONS = ['player', 'computer'];
+const MOVES_FIRST = 'choose';
+const PLAY_AGAIN_RESPONSES = ['yes', 'no'];
 
 function displayBoard(board) {
-  // console.clear();
+  console.clear();
 
   console.log(`You are ${HUMAN_MARKER}. Computer is ${CPU_MARKER}`);
 
@@ -119,7 +122,6 @@ function playerChoosesSquare(board) {
   let square; // declared here so we can use it outside the loop
 
   while (true) {
-    // prompt(`Choose a square (${emptySquares(board).join(', ')}):`);
     prompt(`Choose a square (${joinOr(emptySquares(board), ', ', "or")})`);
     square = readline.question().trim(); // input trimmed to allow spaces in input
 
@@ -129,82 +131,107 @@ function playerChoosesSquare(board) {
   board[square] = HUMAN_MARKER;
 }
 
-function checkThreats(board) {
-  let squaresToDefend = [];
+function findAtRiskSquares(board, marker) {
+  let atRiskSquares = [];
   let winningLines = WINNING_LINES.map(line => line.map(square => {
-    return ({[String(square)]: board[String(square)]});
+    return ([square, board[String(square)]]);
   }));
-  // console.log(winningLines);
 
   winningLines.forEach(line => {
-    let arr = Object.values(line);
-    if (arr.filter(val => val === HUMAN_MARKER).length === 2 &&
-      arr.includes(INITIAL_MARKER)) {
-      Object.keys(line).forEach(key => {
-        if (line[key] === INITIAL_MARKER) {
-          console.log(parseInt(key, 10));
-        }
-      });
+    let markArr = line.map(element => element[1]);
+    let idxArr = line.map(element => element[0]);
+
+    if (markArr.filter(val => val === marker).length === 2 &&
+    markArr.includes(INITIAL_MARKER)) {
+      atRiskSquares.push(idxArr[markArr.indexOf(INITIAL_MARKER)]);
     }
   });
-  // console.log(
-  //   WINNING_LINES.map(line => line.map(square => {
-  //     return ({[String(square)]: board[String(square)]});
-  //   })).forEach(line => {
-  //     let arr = Object.values(line);
-  //     if (arr.filter(val => val === HUMAN_MARKER).length === 2 &&
-  //       arr.includes(INITIAL_MARKER)) {
-  //       squaresToDefend.push();
-  //     }
-  //   })
-  // );
 
-
-
-  // .forEach(line => );
-
-  // ['X', 'X', ' ']
-
-  // WINNING_LINES.forEach(line => {
-  //   line.map(square => board[square]).forEach(
-  //     combo => {
-  //       if (combo.filter(element => element === HUMAN_MARKER).length === 2 &&
-  //       combo.includes(INITIAL_MARKER)) {
-  //         squaresToDefend.push(combo);
-  //       }
-  //     }
-  //   );
-  // });
-  // WINNING_LINES.forEach((line, idx) => {
-  //   if (line.filter(square => square === HUMAN_MARKER) &&
-  //   line.includes(INITIAL_MARKER)) {
-  //     squaresToDefend.push(idx);
-  //   }
-  // });
+  return atRiskSquares;
 }
 
 function computerChoosesSquare(board) {
-  let randomIndex = Math.floor(Math.random() * emptySquares(board).length);
-  let square = emptySquares(board)[randomIndex];
-  // let immediateThreats =
-  checkThreats(board);
+  let squaresToAttack = findAtRiskSquares(board, CPU_MARKER);
+  let squares = [];
 
-  // console.log(immediateThreats);
+  if (!squaresToAttack.length) {
+    let squaresToDefend = findAtRiskSquares(board, HUMAN_MARKER);
+    if (!squaresToDefend.length) {
+      squares = emptySquares(board);
+    } else squares = squaresToDefend;
+  } else squares = squaresToAttack;
+
+  let square;
+  if (squares.includes(String(5))) {
+    square = 5;
+  } else {
+    let randomIndex = Math.floor(Math.random() * squares.length);
+    square = squares[randomIndex];
+  }
+
   board[square] = CPU_MARKER;
+}
+
+function movesFirst() {
+  let firstPlayer;
+  while (true) {
+    prompt(`Select who goes first: (${joinOr(['Player (p)', 'Computer (c)'], '', "or")}).`);
+    firstPlayer = readline.question().trim().toLowerCase(); // input trimmed to allow spaces in input
+
+    if (MOVES_FIRST_OPTIONS.map(val => val[0]).includes(firstPlayer)) break;
+    prompt("Sorry, that's not a valid choice.  Pick again.");
+  }
+  return firstPlayer;
+}
+
+function playAgain() {
+  while (true) {
+    prompt('Play again? (y or n)');
+    let answer = readline.question().toLowerCase();
+
+    let verifiedAnswer = PLAY_AGAIN_RESPONSES.map(response => {
+      if (response.includes(answer) || answer.includes(response)) {
+        return true;
+      } else return false;
+    }).some(_ => true);
+
+    if (verifiedAnswer) {
+      if (answer[0] === 'n') return false;
+      if (answer[0] === 'y') return true;
+    }
+
+    prompt('Ambiguous response. Re-enter choice:');
+  }
+}
+
+function chooseSquare(board, currentPlayer) {
+  if (currentPlayer === 'computer') {
+    computerChoosesSquare(board);
+  } else playerChoosesSquare(board);
+}
+
+function alternatePlayer(currentPlayer) {
+  return (currentPlayer === 'computer') ? 'player' : 'computer';
 }
 
 let score = initializeScore();
 
 while (true) {
   let board = initializeBoard();
+  let currentPlayer = 'player';
+
+  // account for player not going first
+  if (MOVES_FIRST === 'choose' || !MOVES_FIRST_OPTIONS.includes(MOVES_FIRST)) {
+    if (movesFirst() === 'c') {
+      currentPlayer = 'computer';
+    }
+  }
 
   while (true) {
     displayBoard(board);
 
-    playerChoosesSquare(board);
-    if (someoneWon(board) || boardFull(board)) break;
-
-    computerChoosesSquare(board);
+    chooseSquare(board, currentPlayer);
+    currentPlayer = alternatePlayer(currentPlayer);
     if (someoneWon(board) || boardFull(board)) break;
   }
 
@@ -226,9 +253,7 @@ while (true) {
     score = initializeScore();
   }
 
-  prompt('Play again? (y or n)');
-  let answer = readline.question().toLowerCase()[0];
-  if (answer !== 'y') break;
+  if (!playAgain()) break;
 }
 
 prompt('Thanks for playing Tic Tac Toe!');
