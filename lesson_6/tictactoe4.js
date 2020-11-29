@@ -129,67 +129,44 @@ function playerChoosesSquare(board) {
   board[square] = HUMAN_MARKER;
 }
 
-function checkThreats(board) {
-  let squaresToDefend = [];
+function findAtRiskSquares(board, marker) {
+  let atRiskSquares = [];
   let winningLines = WINNING_LINES.map(line => line.map(square => {
-    return ({[String(square)]: board[String(square)]});
+    return ([square, board[String(square)]]);
   }));
-  // console.log(winningLines);
 
   winningLines.forEach(line => {
-    let arr = Object.values(line);
-    if (arr.filter(val => val === HUMAN_MARKER).length === 2 &&
-      arr.includes(INITIAL_MARKER)) {
-      Object.keys(line).forEach(key => {
-        if (line[key] === INITIAL_MARKER) {
-          console.log(parseInt(key, 10));
-        }
-      });
+    let markArr = line.map(element => element[1]);
+    let idxArr = line.map(element => element[0]);
+
+    if (markArr.filter(val => val === marker).length === 2 &&
+    markArr.includes(INITIAL_MARKER)) {
+      atRiskSquares.push(idxArr[markArr.indexOf(INITIAL_MARKER)]);
     }
   });
-  // console.log(
-  //   WINNING_LINES.map(line => line.map(square => {
-  //     return ({[String(square)]: board[String(square)]});
-  //   })).forEach(line => {
-  //     let arr = Object.values(line);
-  //     if (arr.filter(val => val === HUMAN_MARKER).length === 2 &&
-  //       arr.includes(INITIAL_MARKER)) {
-  //       squaresToDefend.push();
-  //     }
-  //   })
-  // );
 
-
-
-  // .forEach(line => );
-
-  // ['X', 'X', ' ']
-
-  // WINNING_LINES.forEach(line => {
-  //   line.map(square => board[square]).forEach(
-  //     combo => {
-  //       if (combo.filter(element => element === HUMAN_MARKER).length === 2 &&
-  //       combo.includes(INITIAL_MARKER)) {
-  //         squaresToDefend.push(combo);
-  //       }
-  //     }
-  //   );
-  // });
-  // WINNING_LINES.forEach((line, idx) => {
-  //   if (line.filter(square => square === HUMAN_MARKER) &&
-  //   line.includes(INITIAL_MARKER)) {
-  //     squaresToDefend.push(idx);
-  //   }
-  // });
+  return atRiskSquares;
 }
 
 function computerChoosesSquare(board) {
-  let randomIndex = Math.floor(Math.random() * emptySquares(board).length);
-  let square = emptySquares(board)[randomIndex];
-  // let immediateThreats =
-  checkThreats(board);
+  let squaresToAttack = findAtRiskSquares(board, CPU_MARKER);
+  let squares = [];
 
-  // console.log(immediateThreats);
+  if (!squaresToAttack.length) {
+    let squaresToDefend = findAtRiskSquares(board, HUMAN_MARKER);
+    if (!squaresToDefend.length) {
+      squares = emptySquares(board);
+    } else squares = squaresToDefend;
+  } else squares = squaresToAttack;
+
+  let square;
+  if (squares.includes(5)) {
+    square = 5;
+  } else {
+    let randomIndex = Math.floor(Math.random() * squares.length);
+    square = squares[randomIndex];
+  }
+
   board[square] = CPU_MARKER;
 }
 
