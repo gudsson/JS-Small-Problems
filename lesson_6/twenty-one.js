@@ -4,6 +4,8 @@
 
 const readline = require('readline-sync');
 const GAME_TITLE = 'Twenty-One';
+const BUST_NUMBER = 21;
+const DEALER_HITS_UNTIL = 17;
 const HUMAN_PLAYER = 'Player';
 const CPU_PLAYER = 'Dealer';
 const CARD_SUITS = ['heart', 'diamonds', 'spades', 'clubs'];
@@ -67,6 +69,10 @@ function hit(hand, deck) {
   return hand;
 }
 
+function prompt(text) {
+  console.log(`=> ${text}`);
+}
+
 function dealCards(deck, numCards) {
   let cards = [];
 
@@ -111,7 +117,7 @@ function total(hand) {
 
   // correct for Aces
   values.filter(value => value === "Ace").forEach(_ => {
-    if (sum > 21) sum -= 10;
+    if (sum > BUST_NUMBER) sum -= 10;
   });
 
   return sum;
@@ -121,7 +127,7 @@ function busted(hand, deck = [], hitPlayer = false) {
   if (hitPlayer) {
     hit(hand, deck);
   }
-  return (total(hand) > 21);
+  return (total(hand) > BUST_NUMBER);
 }
 
 function displayHand(cards, obscure = false) {
@@ -191,7 +197,7 @@ while (true) { //Start Individual Game
   while (true) {
     displayHand(dealerHand, true);
     displayHand(playerHand);
-    console.log("hit or stay?");
+    prompt("hit or stay?");
     let answer = readline.question();
     console.log('');
 
@@ -205,7 +211,7 @@ while (true) { //Start Individual Game
     score[CPU_PLAYER] += 1;
   } else {
 
-    while (total(dealerHand) <= 17) {
+    while (total(dealerHand) <= DEALER_HITS_UNTIL) {
       displayHand(dealerHand);
       if (busted(dealerHand, deck, true)) break;
       displayHand(dealerHand);
