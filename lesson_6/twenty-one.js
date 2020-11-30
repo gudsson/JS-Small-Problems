@@ -55,6 +55,7 @@
 // it's time to compare the total value of the cards and see who
 // has the highest value.
 const readline = require('readline-sync');
+const GAME_TITLE = 'Twenty-One';
 const HUMAN_PLAYER = 'Player';
 const CPU_PLAYER = 'Dealer';
 const CARD_SUITS = ['heart', 'diamonds', 'spades', 'clubs'];
@@ -64,6 +65,7 @@ const FACE_CARDS = {
   K: 'King',
   A: 'Ace',
 };
+const PLAY_AGAIN_RESPONSES = ['yes', 'no'];
 
 function joinOr(array, delimiter = ', ', outro = 'or') {
   if (array.length < 3) {
@@ -150,6 +152,28 @@ function dealCards(deck, numCards) {
   return cards;
 }
 
+function initializeScore(players) {
+  // let score = {
+  //   Player: 0,
+  //   Computer: 0,
+  // };
+
+  let score = {};
+  players.forEach(player => {
+    score[player] = 0;
+  });
+
+  return score;
+}
+
+function displayScore(score) {
+  console.log(`Current Score:`);
+  Object.keys(score).forEach(player => {
+    console.log(`   ${player} Wins:   ${score[player]}`);
+  });
+  console.log('');
+}
+
 function total2(hand) {
   let player = Object.keys(hand)[0];
   let values = hand[player];
@@ -189,14 +213,21 @@ function total2(hand) {
 //   } else return false;
 // }
 
-function busted(hand, deck) {
-  let busted;
-  let player = Object.keys(hand)[0];
-  let total = total2(hand);
-
-  if (player === HUMAN_PLAYER || total2(hand) > 16) {
+function busted(hand, deck, hitPlayer = false) {
+  // let busted;
+  // let player = Object.keys(hand)[0];
+  // let total = total2(hand);
+  // let cards = Object.values(hand)[0];
+  // console.log();
+  if (hitPlayer) {
     hit(hand, deck);
-  } //else stay
+  }
+  // if ((total2(hand) <= 21)) hit(hand, deck);
+  return (total2(hand) > 21);
+
+  // if (player === HUMAN_PLAYER || total2(hand) > 16) {
+  //   hit(hand, deck);
+  // } //else stay
 
   //TODO: check for busting
 
@@ -220,22 +251,114 @@ function displayHand(cards) {
   console.log(`${player} has: ${joinOr(displayCards,", ","and")}`);
 }
 
-let deck = initializeDeck();
-let dealerHand = { [CPU_PLAYER]: dealCards(deck, 2)};
-let playerHand = { [HUMAN_PLAYER]: dealCards(deck, 2)};
+function printTitle(title) {
+  let titleStr = ` Welcome to ${title} `;
 
-displayHand(dealerHand);
+  console.clear();
+  console.log(`+${'-'.repeat(titleStr.length)}+`);
+  console.log(`|${titleStr}|`);
+  console.log(`+${'-'.repeat(titleStr.length)}+`);
+  console.log('');
 
-while (true) {
-  // hit(playerHand, deck);
-  displayHand(playerHand);
-  console.log("hit or stay?");
-  let answer = readline.question();
-  if (answer === 'stay' || busted(playerHand, deck)) break;
+  return null;
 }
 
-// if (busted()) {
-//   // probably end the game? or ask the user to play again?
-// } else {
-//   console.log("You chose to stay!");  // if player didn't bust, must have stayed to get here
-// }
+function playAgain() {
+  while (true) {
+    console.log('Play again? (y or n)');
+    let answer = readline.question().toLowerCase();
+    let verifiedAnswer = PLAY_AGAIN_RESPONSES.map(response => {
+      if (response.includes(answer) || answer.includes(response)) {
+        return true;
+      } else return false;
+    }).some(_ => true);
+
+    if (verifiedAnswer) {
+      if (answer[0] === 'n') return false;
+      if (answer[0] === 'y') return true;
+    }
+
+    console.log('Ambiguous response. Re-enter choice:');
+  }
+}
+
+function someoneWon(playerHand, dealerHand) {
+  return (total2(playerHand) !== total2(dealerHand));
+}
+
+function getWinner(playerHand, dealerHand) {
+  if (total2[playerHand] > total2[dealerHand]) {
+    return Object.keys(playerHand)[0];
+  } else {
+    return Object.keys(dealerHand)[0];
+  }
+}
+
+//Start Match
+printTitle(GAME_TITLE);
+let score = initializeScore([CPU_PLAYER, HUMAN_PLAYER]);
+// displayScore(score);
+
+while (true) {
+  //Start Individual Game
+  let deck = initializeDeck();
+  let dealerHand = { [CPU_PLAYER]: dealCards(deck, 2)};
+  let playerHand = { [HUMAN_PLAYER]: dealCards(deck, 2)};
+
+  // displayHand(dealerHand);
+
+  while (true) {
+    displayHand(dealerHand);
+    displayHand(playerHand);
+    console.log("hit or stay?");
+    let answer = readline.question();
+    console.log('');
+
+    // if player doesn't stay, hit them and check if busted
+    if (answer === 'stay' || busted(playerHand, deck, true)) break;
+  }
+
+  if (busted(playerHand, deck)) { //game ends
+    displayHand(playerHand);
+    console.log(`Bust! ${HUMAN_PLAYER} has ${total2(playerHand)}.`);
+    console.log(`${CPU_PLAYER} wins.\n`);
+    score[CPU_PLAYER] += 1;
+  } else {
+    // dealer starts to play
+    console.log('stayed. dealer starts to play');
+
+    while (total2(dealerHand) <= 17) { //dealer has to hit
+      if (busted(dealerHand, deck, true)) break; //busted
+      console.log(`${CPU_PLAYER} has ${total2(dealerHand)}.\n`);
+    }
+
+    if (busted(dealerHand, deck)) { //dealer busts
+      displayHand(dealerHand);
+      console.log(`Bust! ${CPU_PLAYER} has ${total2(playerHand)}.`);
+      console.log(`${HUMAN_PLAYER} wins.\n`);
+      score[HUMAN_PLAYER] += 1;
+    } else { //both players stayed
+        if (someoneWon(playerHand, dealerHand)) {
+          // let winner = getWinner(playerHand, dealerHand);
+          // console.log(`${winner} wins.`);
+          // score[winner] += 1;
+        } else {
+          console.log(`It's a tie.`)
+        }
+    }
+    // dealerPlays(dealerHand);
+  //   console.log("You chose to stay!");
+  // if player didn't bust, must have stayed to get here
+  }
+
+  // if (someoneWonMatch(score)) {
+  //   let matchWinner = detectMatchWinner(score);
+  //   prompt(`${matchWinner} is first to ${MATCH_THRESHOLD} and wins the match!`);
+  //   score = initializeScore();
+  // }
+  displayScore(score);
+  if (!playAgain()) break;
+  printTitle(GAME_TITLE);
+}
+
+console.log(`Thanks for playing ${GAME_TITLE}!`);
