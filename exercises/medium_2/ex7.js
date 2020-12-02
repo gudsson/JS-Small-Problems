@@ -1,3 +1,4 @@
+/* eslint-disable no-tabs */
 /////////////////
 // Bubble Sort //
 /////////////////
@@ -64,6 +65,18 @@ function bubbleSort(arr) {
 
   return arr;
 }
+
+// function bubbleSort(array) {
+//   while (true) {
+//     let swapped = false;
+//     for (let idx = 1; idx < array.length; idx++) {
+//       if (array[idx - 1] <= array[idx]) continue;
+//       [array[idx - 1], array[idx]] = [array[idx], array[idx - 1]];
+//       swapped = true;
+//     }
+//     if (!swapped) break;
+//   }
+// }
 
 function checkSwap(val1, val2) {
   return (val1 > val2);
