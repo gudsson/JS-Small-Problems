@@ -30,36 +30,50 @@
 
 // Feel free to use the merge function you wrote in the previous exercise.
 
+// function mergeSort(arr) {
+//   // split array up
+//   let splitArr = mergeSort(arr);
+
+
+//   // let sortedArr = splitArr.map(arr => sortArray(arr));
+//   // sortArray(splitArr);
+//   // return splitArr[0][0][0][0];  //get to
+//   return sortedArr;
+// }
+
+// function merge(arr1, arr2) {
+//   if (arr.length > 1) {
+//     return arr.map(subArr => subArr.sort((a, b) => b - a));
+//   } else return arr;
+// }
+
 function mergeSort(arr) {
-  // split array up
-  let splitArr = splitArray(arr);
-
-  return splitArr[0][0][0][0];  //get to
-
-}
-
-function splitArray(arr) {
-  let newArr = [];
+  // let newArr = [];
 
   if (arr.length > 1) {
     let middle = Math.floor(arr.length / 2);
-    newArr = [splitArray(arr.slice(0, middle)), splitArray(arr.slice(middle))];
-    return newArr;
+    return merge(mergeSort(arr.slice(0, middle)), mergeSort(arr.slice(middle)));
   } else return arr;
 }
 
-// function merge(arr1, arr2) {
-//   let mergedArr = arr1.concat(arr2).sort((a, b) => a - b);
-//   return mergedArr;
-// }
+function merge(arr1, arr2) {
+  let mergedArr = arr1.concat(arr2);
+  if ((typeof mergedArr[0]) === 'number') {
+    mergedArr.sort((a, b) => a - b);
+  } else {
+    mergedArr.sort();
+  }
+  return mergedArr;
+}
 
 // Examples:
 console.log(mergeSort([9, 5, 7, 1]));           // [1, 5, 7, 9]
-// console.log(mergeSort([5, 3]));                 // [3, 5]
-// console.log(mergeSort([6, 2, 7, 1, 4]));        // [1, 2, 4, 6, 7]
+console.log(mergeSort([5, 3]));                 // [3, 5]
+console.log(mergeSort([6, 2, 7, 1, 4]));        // [1, 2, 4, 6, 7]
 
-// console.log(mergeSort(['Sue', 'Pete', 'Alice', 'Tyler', 'Rachel', 'Kim', 'Bonnie']));
+console.log(mergeSort(['Sue', 'Pete', 'Alice', 'Tyler', 'Rachel', 'Kim', 'Bonnie']));
 // // ["Alice", "Bonnie", "Kim", "Pete", "Rachel", "Sue", "Tyler"]
 
-// console.log(mergeSort([7, 3, 9, 15, 23, 1, 6, 51, 22, 37, 54, 43, 5, 25, 35, 18, 46]));
+console.log(mergeSort([7, 3, 9, 15, 23, 1, 6, 51, 22, 37,
+  54, 43, 5, 25, 35, 18, 46]));
 // // [1, 3, 5, 6, 7, 9, 15, 18, 22, 23, 25, 35, 37, 43, 46, 51, 54]
