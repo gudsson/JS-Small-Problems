@@ -31,9 +31,27 @@
 // Feel free to use the merge function you wrote in the previous exercise.
 
 function mergeSort(arr) {
-  // let mergedArr = arr1.concat(arr2).sort((a, b) => a - b);
-  return mergedArr;
+  // split array up
+  let splitArr = splitArray(arr);
+
+  return splitArr[0][0][0][0];  //get to
+
 }
+
+function splitArray(arr) {
+  let newArr = [];
+
+  if (arr.length > 1) {
+    let middle = Math.floor(arr.length / 2);
+    newArr = [splitArray(arr.slice(0, middle)), splitArray(arr.slice(middle))];
+    return newArr;
+  } else return arr;
+}
+
+// function merge(arr1, arr2) {
+//   let mergedArr = arr1.concat(arr2).sort((a, b) => a - b);
+//   return mergedArr;
+// }
 
 // Examples:
 console.log(mergeSort([9, 5, 7, 1]));           // [1, 5, 7, 9]

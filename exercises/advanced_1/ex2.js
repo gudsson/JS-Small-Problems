@@ -37,9 +37,11 @@
 // 5  7  9
 // 8  2  6
 
-// Write a function that takes an array of arrays representing a 3x3 matrix, and returns the transpose of the matrix. You should implement the function on your own, without using any external libraries.
-
-// Take care not to modify the original matrix — your function must produce a new matrix and leave the input matrix array unchanged.
+// Write a function that takes an array of arrays representing a 3x3 matrix,
+// and returns the transpose of the matrix. You should implement the function
+// on your own, without using any external libraries.
+// Take care not to modify the original matrix — your function must produce
+// a new matrix and leave the input matrix array unchanged.
 
 // Examples:
 const matrix = [
