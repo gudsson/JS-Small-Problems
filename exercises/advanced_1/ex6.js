@@ -30,26 +30,7 @@
 
 // Feel free to use the merge function you wrote in the previous exercise.
 
-// function mergeSort(arr) {
-//   // split array up
-//   let splitArr = mergeSort(arr);
-
-
-//   // let sortedArr = splitArr.map(arr => sortArray(arr));
-//   // sortArray(splitArr);
-//   // return splitArr[0][0][0][0];  //get to
-//   return sortedArr;
-// }
-
-// function merge(arr1, arr2) {
-//   if (arr.length > 1) {
-//     return arr.map(subArr => subArr.sort((a, b) => b - a));
-//   } else return arr;
-// }
-
 function mergeSort(arr) {
-  // let newArr = [];
-
   if (arr.length > 1) {
     let middle = Math.floor(arr.length / 2);
     return merge(mergeSort(arr.slice(0, middle)), mergeSort(arr.slice(middle)));
