@@ -80,14 +80,15 @@
 function binarySearch(arr, searchItem) {
   let middle = Math.floor(arr.length / 2);
   console.log(`middle is at: ${middle}`);
+  let idx = 0;
 
   if (arr[middle] === searchItem) {
-    return middle;
+    return idx + middle;
   } else if (arr[middle] < searchItem) {
-    return binarySearch(arr.slice(middle), searchItem);
+    return idx + binarySearch(arr.slice(middle), searchItem);
   } else if (arr[middle] > searchItem) {
     console.log(arr.slice(0, middle));
-    return binarySearch(arr.slice(0, middle), searchItem);
+    return idx + binarySearch(arr.slice(0, middle), searchItem);
   } else {
     return -1;
   }
