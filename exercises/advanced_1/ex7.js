@@ -1,3 +1,5 @@
+/* eslint-disable max-lines-per-function */
+/* eslint-disable max-statements */
 ///////////////////
 // Binary Search //
 ///////////////////
@@ -67,36 +69,61 @@
 // searchItem if found, or -1 otherwise. You may assume
 // that the array argument will always be sorted.
 
+// function binarySearch(arr, searchItem) {
+//   if (arr.length > 1) {
+//     let middle = Math.floor(arr.length / 2);
+//     return merge(mergeSort(arr.slice(0, middle)), mergeSort(arr.slice(middle)));
+//   } else return arr;
+// }
+
+// incorporate addition of middle
 function binarySearch(arr, searchItem) {
   let middle = Math.floor(arr.length / 2);
-  let idx = 0;
-  console.log(arr.length);
+  console.log(`middle is at: ${middle}`);
 
-  if (arr.length > 1) {
-    if (arr[middle] === searchItem) {
-      idx += middle;
-      return idx;
-    } else if (arr[middle] < searchItem) {
-      console.log(arr.slice(middle + 1));
-      idx += middle;
-      binarySearch(arr.slice(middle + 1));
-    } else {
-      console.log(middle + " : " + arr.slice(0));
-      idx += middle;
-      binarySearch(arr.slice(0, middle));
-    }
+  if (arr[middle] === searchItem) {
+    return middle;
+  } else if (arr[middle] < searchItem) {
+    return binarySearch(arr.slice(middle), searchItem);
+  } else if (arr[middle] > searchItem) {
+    console.log(arr.slice(0, middle));
+    return binarySearch(arr.slice(0, middle), searchItem);
+  } else {
+    return -1;
   }
-  return -1;
+  // let middle = Math.floor(arr.length / 2);
+  // let idx = 0;
+  // if (arr.length % 2 === 0) {
+  //   middle -= 1;
+  // }
+  // if (arr.length) {
+  //   if (arr[middle] === searchItem) {
+  //     return idx + middle;
+  //   } else if (arr[middle] < searchItem) {
+  //     idx += middle;
+  //     return idx + binarySearch(arr.slice(middle + 1), searchItem);
+  //   } else {
+  //     idx += middle;
+  //     return idx + binarySearch(arr.slice(0, middle), searchItem);
+  //   }
+  // } else {
+  //   return -1;
+  // }
 }
 
+// function splitArray(arr, searchItem) {
+
+// }
 // Examples:
-let yellowPages = ['Apple Store', 'Bags Galore', 'Bike Store', 'Donuts R Us', 'Eat a Lot', 'Good Food', 'Pasta Place', 'Pizzeria', 'Tiki Lounge', 'Zooper'];
-console.log(binarySearch(yellowPages, 'Pizzeria'));                   // 7
+let jayArray = ['Stalin', 'Jesus', 'Gretzky', 'Hitler', 'Philomena'];
+console.log(binarySearch(jayArray, 'Hitler'));
+// let yellowPages = ['Apple Store', 'Bags Galore', 'Bike Store', 'Donuts R Us', 'Eat a Lot', 'Good Food', 'Pasta Place', 'Pizzeria', 'Tiki Lounge', 'Zooper'];
+// console.log(binarySearch(yellowPages, 'Pizzeria'));                   // 7
 // binarySearch(yellowPages, 'Apple Store');                // 0
 
-// binarySearch([1, 5, 7, 11, 23, 45, 65, 89, 102], 77);    // -1
-// binarySearch([1, 5, 7, 11, 23, 45, 65, 89, 102], 89);    // 7
+// console.log(binarySearch([1, 5, 7, 11, 23, 45, 65, 89, 102], 77));    // -1
+// console.log(binarySearch([1, 5, 7, 11, 23, 45, 65, 89, 102], 89));    // 7
 // binarySearch([1, 5, 7, 11, 23, 45, 65, 89, 102], 5);     // 1
 
-// binarySearch(['Alice', 'Bonnie', 'Kim', 'Pete', 'Rachel', 'Sue', 'Tyler'], 'Peter');  // -1
-// binarySearch(['Alice', 'Bonnie', 'Kim', 'Pete', 'Rachel', 'Sue', 'Tyler'], 'Tyler');  // 6
+// console.log(binarySearch(['Alice', 'Bonnie', 'Kim', 'Pete', 'Rachel', 'Sue', 'Tyler'], 'Peter'));  // -1
+// console.log(binarySearch(['Alice', 'Bonnie', 'Kim', 'Pete', 'Rachel', 'Sue', 'Tyler'], 'Tyler'));  // 6
