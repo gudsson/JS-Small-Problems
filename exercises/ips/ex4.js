@@ -8,13 +8,23 @@
 // a 7x7 grid (i.e., when N is 7).
 
 function star(n) {
-  let middle = Math.floor(n / 2)
+  let middle = Math.floor(n / 2);
+  let padding = n - 3;
   for (let row = 0; row < n; row++) {
     if (row === middle) {
       console.log('*'.repeat(n));
-    } else console.log(row + 1);
+    } else {
+      let toMiddle = (row > middle) ? row - middle - 1 : middle - row - 1;
+      let sidePad = (padding / 2) - toMiddle;
+      let middlePad = (padding - (2 * sidePad)) / 2;
+      console.log(
+        ' '.repeat(sidePad)
+          + '*' + ' '.repeat(middlePad)
+          + '*' + ' '.repeat(middlePad)
+          + '*' + ' '.repeat(sidePad)
+      );
+    }
   }
-
   return null;
 }
 
@@ -29,7 +39,7 @@ star(7);
 //  * * *
 // *  *  *
 
-// star(9);
+star(9);
 // logs
 // *   *   *
 //  *  *  *
