@@ -34,25 +34,38 @@
 var Fraction = require('fraction.js');
 
 function egyptian(frac) {
+  let denominator = 1;
   let arr = [];
-  
-  return frac;
+
+  do {
+    if (Fraction(1, denominator) <= frac) {
+      frac = frac.sub(1, denominator);
+      arr.push(denominator);
+    }
+    denominator += 1;
+  }
+  while (frac.n !== 0);
+
+  return arr;
+}
+
+function unegyptian(arr) {
+  return arr.map(val => 1 / val).reduce((sum, val) => sum + val);
 }
 
 // Examples:
-console.log(Fraction(137, 60));
-// console.log(egyptian(Fraction(2, 1))); // -> [1, 2, 3, 6]
-// console.log(egyptian(Fraction(137, 60))); // -> [1, 2, 3, 4, 5]
-// console.log(egyptian(Fraction(3, 1))); // -> [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 230, 57960]
+console.log(egyptian(Fraction(2, 1))); // -> [1, 2, 3, 6]
+console.log(egyptian(Fraction(137, 60))); // -> [1, 2, 3, 4, 5]
+console.log(egyptian(Fraction(3, 1))); // -> [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 230, 57960]
 
-// console.log(unegyptian(egyptian(new Fraction(1, 2)))); // logs 0.5
-// console.log(unegyptian(egyptian(new Fraction(3, 4)))); // logs 0.75
-// console.log(unegyptian(egyptian(new Fraction(39, 20)))); // logs 1.95
-// console.log(unegyptian(egyptian(new Fraction(127, 130)))); // logs 0.9769230769230768
-// console.log(unegyptian(egyptian(new Fraction(3, 1)))); // logs 3
-// console.log(unegyptian(egyptian(new Fraction(5, 7)))); // logs 0.7142857142857142
-// console.log(unegyptian(egyptian(new Fraction(1, 1)))); // logs 1
-// console.log(unegyptian(egyptian(new Fraction(2, 1)))); // logs 2
+console.log(unegyptian(egyptian(new Fraction(1, 2)))); // logs 0.5
+console.log(unegyptian(egyptian(new Fraction(3, 4)))); // logs 0.75
+console.log(unegyptian(egyptian(new Fraction(39, 20)))); // logs 1.95
+console.log(unegyptian(egyptian(new Fraction(127, 130)))); // logs 0.9769230769230768
+console.log(unegyptian(egyptian(new Fraction(3, 1)))); // logs 3
+console.log(unegyptian(egyptian(new Fraction(5, 7)))); // logs 0.7142857142857142
+console.log(unegyptian(egyptian(new Fraction(1, 1)))); // logs 1
+console.log(unegyptian(egyptian(new Fraction(2, 1)))); // logs 2
 // Every rational number can be expressed as an Egyptian Fraction.
 // In fact, every rational number can be expressed as an Egyptian
 // Fraction in an infinite number of different ways. Thus, the
