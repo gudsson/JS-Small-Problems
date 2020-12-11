@@ -14,9 +14,7 @@ const PLAY_AGAIN_RESPONSES = ['yes', 'no'];
 function displayBoard(board) {
   console.clear();
 
-  console.log(`You are ${HUMAN_MARKER}. Computer is ${CPU_MARKER}`);
-
-  console.log('');
+  console.log(`You are ${HUMAN_MARKER}. Computer is ${CPU_MARKER}\n`);
   console.log('     |     |');
   console.log(`  ${board['1']}  |  ${board['2']}  |  ${board['3']}`);
   console.log('     |     |');
@@ -27,8 +25,7 @@ function displayBoard(board) {
   console.log('-----+-----+-----');
   console.log('     |     |');
   console.log(`  ${board['7']}  |  ${board['8']}  |  ${board['9']}`);
-  console.log('     |     |');
-  console.log('');
+  console.log('     |     |\n');
 }
 
 function initializeBoard() {
@@ -45,6 +42,7 @@ function initializeScore() {
   let score = {
     Player: 0,
     Computer: 0,
+    Ties: 0,
   };
 
   return score;
@@ -54,6 +52,7 @@ function displayScore(score) {
   prompt(`Current Score:`);
   prompt(`   Player:   ${score.Player}`);
   prompt(` Computer:   ${score.Computer}`);
+  prompt(`     Ties:   ${score.Ties}`);
 }
 
 function joinOr(array, delimiter = ', ', outro = 'or') {
@@ -63,9 +62,8 @@ function joinOr(array, delimiter = ', ', outro = 'or') {
   }
 
   return array.map((value, idx) => {
-    if (idx === array.length - 1) {
-      return `${outro} ${value}`;
-    } else return value;
+    if (idx === array.length - 1) return `${outro} ${value}`;
+    else return value;
   }).join(delimiter).trim();
 }
 
@@ -81,7 +79,7 @@ function boardFull(board) {
   return emptySquares(board).length === 0;
 }
 
-function someoneWon(board) { // board is unused for now; we'll use it later
+function someoneWon(board) {
   return !!detectWinner(board);
 }
 
@@ -95,9 +93,7 @@ function detectMatchWinner(score) {
     return 'Player';
   } else if (score.Computer === MATCH_THRESHOLD) {
     return 'Computer';
-  } else {
-    return null;
-  }
+  } else return null;
 }
 
 function detectWinner(board) {
@@ -119,11 +115,11 @@ function detectWinner(board) {
 }
 
 function playerChoosesSquare(board) {
-  let square; // declared here so we can use it outside the loop
+  let square;
 
   while (true) {
     prompt(`Choose a square (${joinOr(emptySquares(board), ', ', "or")})`);
-    square = readline.question().trim(); // input trimmed to allow spaces in input
+    square = readline.question().trim();
 
     if (emptySquares(board).includes(square)) break;
     prompt("Sorry, that's not a valid choice.");
@@ -165,8 +161,7 @@ function computerChoosesSquare(board) {
   if (squares.includes(String(5))) {
     square = 5;
   } else {
-    let randomIndex = Math.floor(Math.random() * squares.length);
-    square = squares[randomIndex];
+    square = squares[Math.floor(Math.random() * squares.length)];
   }
 
   board[square] = CPU_MARKER;
@@ -214,6 +209,7 @@ function alternatePlayer(currentPlayer) {
   return (currentPlayer === 'computer') ? 'player' : 'computer';
 }
 
+// Begin Game
 let score = initializeScore();
 
 while (true) {
@@ -243,6 +239,7 @@ while (true) {
     score[winner] += 1;
   } else {
     prompt(`It's a tie!`);
+    score.Ties += 1;
   }
 
   displayScore(score);
