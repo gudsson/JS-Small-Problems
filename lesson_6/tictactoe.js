@@ -13,7 +13,6 @@ const PLAY_AGAIN_RESPONSES = ['yes', 'no'];
 
 function displayBoard(board) {
   console.clear();
-
   console.log(`You are ${HUMAN_MARKER}. Computer is ${CPU_MARKER}\n`);
   console.log('     |     |');
   console.log(`  ${board['1']}  |  ${board['2']}  |  ${board['3']}`);
@@ -119,7 +118,7 @@ function playerChoosesSquare(board) {
 
   while (true) {
     prompt(`Choose a square (${joinOr(emptySquares(board), ', ', "or")})`);
-    let square = readline.question().trim();
+    square = readline.question().trim();
 
     if (emptySquares(board).includes(square)) break;
     prompt("Sorry, that's not a valid choice.");
@@ -211,21 +210,18 @@ function alternatePlayer(currentPlayer) {
 let score = initializeScore();
 
 while (true) {
-  //Match initialization
+  // initialize Game
   let board = initializeBoard();
   let currentPlayer = 'player';
 
   // account for player not going first
   if (MOVES_FIRST === 'choose' || !MOVES_FIRST_OPTIONS.includes(MOVES_FIRST)) {
-    if (movesFirst() === 'c') {
-      currentPlayer = 'computer';
-    }
+    if (movesFirst() === 'c') currentPlayer = 'computer';
   }
 
-  // Main gameplay loop
+  // main gameplay loop
   while (true) {
     displayBoard(board);
-
     chooseSquare(board, currentPlayer);
     currentPlayer = alternatePlayer(currentPlayer);
     if (someoneWon(board) || boardFull(board)) break;
@@ -233,6 +229,7 @@ while (true) {
 
   displayBoard(board);
 
+  // check game result
   if (someoneWon(board)) {
     let winner = detectWinner(board);
     prompt(`${detectWinner(board)} won!`);
@@ -244,13 +241,16 @@ while (true) {
 
   displayScore(score);
 
+  // check match result
   if (someoneWonMatch(score)) {
     let matchWinner = detectMatchWinner(score);
     prompt(`${matchWinner} is first to ${MATCH_THRESHOLD} and wins the match!`);
     score = initializeScore();
   }
 
+  // check if player wants to play again
   if (!playAgain()) break;
 }
 
+// exit message
 prompt('Thanks for playing Tic Tac Toe!');
