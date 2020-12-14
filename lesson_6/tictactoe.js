@@ -50,9 +50,9 @@ function initializeScore() {
 
 function displayScore(score) {
   prompt(`Current Score:`);
-  prompt(`   Player:   ${score.Player}`);
-  prompt(` Computer:   ${score.Computer}`);
-  prompt(`     Ties:   ${score.Ties}`);
+  prompt(`   Player:   ${score.Player} ${ score.Player !== 1 ? 'wins' : 'win'}`);
+  prompt(` Computer:   ${score.Computer} ${ score.Computer !== 1 ? 'wins' : 'win'}`);
+  prompt(`     Ties:   ${score.Ties} ${ score.Ties !== 1 ? 'ties' : 'tie'}`);
 }
 
 function joinOr(array, delimiter = ', ', outro = 'or') {
@@ -119,7 +119,7 @@ function playerChoosesSquare(board) {
 
   while (true) {
     prompt(`Choose a square (${joinOr(emptySquares(board), ', ', "or")})`);
-    square = readline.question().trim();
+    let square = readline.question().trim();
 
     if (emptySquares(board).includes(square)) break;
     prompt("Sorry, that's not a valid choice.");
@@ -149,15 +149,14 @@ function findAtRiskSquares(board, marker) {
 function computerChoosesSquare(board) {
   let squaresToAttack = findAtRiskSquares(board, CPU_MARKER);
   let squares = [];
+  let square;
 
   if (!squaresToAttack.length) {
     let squaresToDefend = findAtRiskSquares(board, HUMAN_MARKER);
-    if (!squaresToDefend.length) {
-      squares = emptySquares(board);
-    } else squares = squaresToDefend;
+    if (!squaresToDefend.length) squares = emptySquares(board);
+    else squares = squaresToDefend;
   } else squares = squaresToAttack;
 
-  let square;
   if (squares.includes(String(5))) {
     square = 5;
   } else {
@@ -185,9 +184,8 @@ function playAgain() {
     let answer = readline.question().toLowerCase();
 
     let verifiedAnswer = PLAY_AGAIN_RESPONSES.map(response => {
-      if (response.includes(answer) || answer.includes(response)) {
-        return true;
-      } else return false;
+      if (response.includes(answer) || answer.includes(response)) return true;
+      else return false;
     }).some(_ => true);
 
     if (verifiedAnswer) {
@@ -213,6 +211,7 @@ function alternatePlayer(currentPlayer) {
 let score = initializeScore();
 
 while (true) {
+  //Match initialization
   let board = initializeBoard();
   let currentPlayer = 'player';
 
@@ -223,6 +222,7 @@ while (true) {
     }
   }
 
+  // Main gameplay loop
   while (true) {
     displayBoard(board);
 
