@@ -163,7 +163,7 @@ function computerChoosesSquare(board) {
   }
 
   board[square] = CPU_MARKER;
-}
+
 
 function movesFirst() {
   let firstPlayer;
