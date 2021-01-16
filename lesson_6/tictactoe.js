@@ -54,6 +54,7 @@ function getMatchLength() {
   while (true) {
     matchLength = Number(readline.question(`=> First to `));
 
+    // verify match length
     if (matchLength >= MIN_MATCH_LENGTH
       && matchLength <= MAX_MATCH_LENGTH) break;
     console.log(invalidMsg);
@@ -191,6 +192,7 @@ function someoneWonGame(board) {
 }
 
 function someoneWonMatch(score) {
+  // check if one player has required number of wins
   return (Math.max(score[PLAYERS[0]], score[PLAYERS[1]]) === score.winsNeeded);
 }
 
@@ -305,19 +307,23 @@ function playAgain(matchWinner = null) {
 
   while (true) {
     console.log(`${msg} (y or n)`);
-    let answer = readline.question('=> ').toLowerCase();
+    let answer = readline.question('=> ').replace(/[^a-z]/,'').toLowerCase();
 
+    // check if answer contains y, n, yes or no (after cleaning)
     let verifiedAnswer = PLAY_AGAIN_RESPONSES.map(response => {
       if (response.includes(answer) || answer.includes(response)) return true;
       else return false;
     }).some(_ => true);
 
-    if (verifiedAnswer) {
+    // check if answer contains verified response but does not contain
+    // ambiguous response (simultaneously yes and no).
+    if (verifiedAnswer
+      && !(answer.includes('n') && (answer.includes('n')))) {
       if (answer[0] === 'n') return false;
       if (answer[0] === 'y') return true;
     }
 
-    console.log('Ambiguous response. Re-enter choice:');
+    console.log('\nAmbiguous response. Re-enter choice:');
   }
 }
 
@@ -339,7 +345,7 @@ function joinOr(array, delimiter = ', ', outro = 'or') {
   }).join(delimiter).trim();
 }
 
-// Start Game
+// GAME PROGRAM //
 displayGameTitle(GAME_NAME);
 
 // Initialize Best-of-N Matchup
