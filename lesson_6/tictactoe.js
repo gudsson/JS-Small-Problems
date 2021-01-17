@@ -168,15 +168,20 @@ function displayScore(score, screenClear = true) {
 
   // Scoreboard Line 1
   console.log(`${title}${padding[0]}${capitalize(PLAYERS[0])}:   `
-    + `${score[PLAYERS[0]]} ${ score[PLAYERS[0]] !== 1 ? 'wins' : 'win'}`);
+    + `${score[PLAYERS[0]]} ${pluralize('win', score[PLAYERS[0]])}`);
 
   // Scoreboard Line 2
   console.log(`${'='.repeat(title.length)}${padding[1]}${capitalize(PLAYERS[1])}:   `
-    + `${score[PLAYERS[1]]} ${ score[PLAYERS[1]] !== 1 ? 'wins' : 'win'}`);
+    + `${score[PLAYERS[1]]} ${pluralize('win', score[PLAYERS[1]])}`);
 
   // Scoreboard Line 3
   console.log(`${padding[2]}Ties:   `
-    + `${score.ties} ${ score.ties !== 1 ? 'ties' : 'tie'}\n`);
+    + `${score.ties} ${pluralize('tie', score.ties)}\n`);
+}
+
+function pluralize(result, score) {
+  if (score !== 1) return result + 's';
+  else return result;
 }
 
 function emptySquares(board) {
@@ -252,9 +257,9 @@ function computerChoosesSquare(board) {
   let squares = [];
   let square;
 
-  if (!squaresToAttack.length) {
+  if (squaresToAttack.length > 0) {
     let squaresToDefend = findAtRiskSquares(board, HUMAN_MARKER);
-    if (!squaresToDefend.length) squares = emptySquares(board);
+    if (squaresToDefend.length > 0) squares = emptySquares(board);
     else squares = squaresToDefend;
   } else squares = squaresToAttack;
 
@@ -318,7 +323,7 @@ function playAgain(matchWinner = null) {
     // check if answer contains verified response but does not contain
     // ambiguous response (simultaneously yes and no).
     if (verifiedAnswer
-      && !(answer.includes('n') && (answer.includes('n')))) {
+      && !(answer.includes('y') && (answer.includes('n')))) {
       if (answer[0] === 'n') return false;
       if (answer[0] === 'y') return true;
     }
@@ -386,4 +391,4 @@ while (true) {
 }
 
 // user quit. log exit message.
-console.log('Thanks for playing Tic Tac Toe!');
+console.log('\nThanks for playing Tic Tac Toe!');
