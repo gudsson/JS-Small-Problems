@@ -39,7 +39,6 @@ function displaycardImages(cards) {
     display.push(displayLine.join(' '));
   }
   display.forEach(line => console.log(line));
-  // display = cards.map
 }
 
 let blankCard = cardImage();
