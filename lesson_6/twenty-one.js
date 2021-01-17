@@ -15,9 +15,19 @@ const FACE_CARDS = {
   K: 'King',
   A: 'Ace',
 };
+// get from TTT
 const PLAY_AGAIN_RESPONSES = ['yes', 'no'];
+const SUIT_UTF16 = {
+  heart: String.fromCharCode(9825),
+  diamonds: String.fromCharCode(9826),
+  spades: String.fromCharCode(9828),
+  clubs: String.fromCharCode(9831)
+};
+const CARD_WIDTH = 5;
 
 function joinOr(array, delimiter = ', ', outro = 'or') {
+  // similar to Array.prototype.join(), but adds additional
+  // outro word before last element in array instead of last comma
   if (array.length < 3) {
     delimiter = ' ';
     if (array.length < 2) outro = '';
@@ -30,6 +40,7 @@ function joinOr(array, delimiter = ', ', outro = 'or') {
   }).join(delimiter).trim();
 }
 
+// done
 function buildDeck() {
   let deck = [];
 
@@ -38,13 +49,14 @@ function buildDeck() {
       deck.push([String(idx), suit]);
     }
     Object.values(FACE_CARDS).forEach(card => {
-      deck.push([card, suit]);
+      deck.push([card[0], suit]);
     });
   });
 
   return deck;
 }
 
+// done
 function shuffle(deck) {
   let shuffledDeck = [];
 
@@ -56,12 +68,14 @@ function shuffle(deck) {
   return shuffledDeck;
 }
 
+// done
 function initializeDeck() {
   return shuffle(buildDeck());
 }
 
+// done
 function dealCard(deck) {
-  return deck.shift()[0];
+  return deck.shift();
 }
 
 function hit(hand, deck) {
@@ -69,10 +83,12 @@ function hit(hand, deck) {
   return hand;
 }
 
+// get rid of? use differently?
 function prompt(text) {
   console.log(`=> ${text}`);
 }
 
+// i think it's ok?
 function dealCards(deck, numCards) {
   let cards = [];
 
@@ -83,6 +99,7 @@ function dealCards(deck, numCards) {
   return cards;
 }
 
+// I think it's ok?
 function initializeScore(players) {
   let score = {};
   players.forEach(player => {
@@ -92,6 +109,7 @@ function initializeScore(players) {
   return score;
 }
 
+// get best-of-n functionality from TTT
 function displayScore(score) {
   console.log(`Current Score:`);
   Object.keys(score).forEach(player => {
@@ -100,23 +118,60 @@ function displayScore(score) {
   console.log('');
 }
 
+function cardImage(card = null) {
+  let cardArr = [];
+  let [val, suit] = (!card) ? ['',''] : [card[0], SUIT_UTF16[card[1]]];
+  let [valPad, suitPad] = [CARD_WIDTH - val.length, (CARD_WIDTH - 1) / 2];
+  let [top, bot, side, fill] = ['_', String.fromCharCode(8254), '|', ' '];
+  let valLine = `${val}${fill.repeat(valPad)}`;
+  let suitLine = `${fill.repeat(suitPad)}${suit}${fill.repeat(suitPad)}`;
+
+  // if card isn't known, replace show backside
+  if (!card) {
+    fill = '/';
+    [valLine, suitLine] = [fill.repeat(CARD_WIDTH), fill.repeat(CARD_WIDTH)];
+  }
+
+  cardArr[0] = ` ${top.repeat(CARD_WIDTH)} `;
+  cardArr[1] = `${side}${valLine}${side}`;
+  cardArr[2] = `${side}${suitLine}${side}`;
+  cardArr[3] = `${side}${fill.repeat(CARD_WIDTH)}${side}`;
+  cardArr[4] = ` ${bot.repeat(CARD_WIDTH)} `;
+
+  return cardArr;
+}
+
+function displaycardImages(cards) {
+  let display = [];
+  for (let line = 0; line <= 4; line++) {
+    let displayLine = [];
+    for (let card = 0; card < cards.length; card++) {
+      displayLine.push(cards[card][line]);
+    }
+    display.push(displayLine.join(' '));
+  }
+  display.forEach(line => console.log(line));
+}
+
 function total(hand) {
+  console.log('hand: ' + hand);
   let player = Object.keys(hand)[0];
   let values = hand[player];
   let sum = 0;
 
   values.forEach(value => {
-    if (value === "Ace") {
+    if (value[0] === "A") {
       sum += 11;
-    } else if (['Jack', 'Queen', 'King'].includes(value)) {
+      // no me gusta
+    } else if (['J', 'Q', 'K'].includes(value[0])) {
       sum += 10;
     } else {
-      sum += Number(value);
+      sum += Number(value[0]);
     }
   });
 
   // correct for Aces
-  values.filter(value => value === "Ace").forEach(_ => {
+  values.filter(value => value[0] === "A").forEach(_ => {
     if (sum > BUST_NUMBER) sum -= 10;
   });
 
@@ -195,10 +250,19 @@ while (true) { //Start Individual Game
   let playerHand = { [HUMAN_PLAYER]: dealCards(deck, 2)};
 
   while (true) {
+
+    // let blankCard = cardImage();
+    // let card1 = cardImage(['10', 'diamonds']);
+    // let cards = [blankCard, card1];
+    // console.log(displaycardImages(cards));
+    console.log(dealerHand);
+
     displayHand(dealerHand, true);
     displayHand(playerHand);
-    prompt("hit or stay?");
-    let answer = readline.question();
+
+    // stay seems to be broken
+    console.log("\nHit or stay?");
+    let answer = readline.question('=> ');
     console.log('');
 
     if (answer === 'stay' || busted(playerHand, deck, true)) break;
