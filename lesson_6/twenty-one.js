@@ -6,9 +6,10 @@ const readline = require('readline-sync');
 const GAME_TITLE = 'Twenty-One';
 const BUST_NUMBER = 21;
 const DEALER_HITS_UNTIL = 17;
-const HUMAN_PLAYER = 'Player';
-const CPU_PLAYER = 'Dealer';
-const CARD_SUITS = ['heart', 'diamonds', 'spades', 'clubs'];
+const HUMAN_PLAYER = 'player';
+const CPU_PLAYER = 'dealer';
+const PLAYERS = [CPU_PLAYER, HUMAN_PLAYER];
+const CARD_SUITS = ['hearts', 'diamonds', 'spades', 'clubs'];
 const FACE_CARDS = {
   J: 'Jack',
   Q: 'Queen',
@@ -17,13 +18,17 @@ const FACE_CARDS = {
 };
 // get from TTT
 const PLAY_AGAIN_RESPONSES = ['yes', 'no'];
-const SUIT_UTF16 = {
-  heart: String.fromCharCode(9825),
-  diamonds: String.fromCharCode(9826),
-  spades: String.fromCharCode(9828),
-  clubs: String.fromCharCode(9831)
+const SUIT_UTF = {
+  hearts: String.fromCharCode(9829),
+  diamonds: String.fromCharCode(9830),
+  spades: String.fromCharCode(9824),
+  clubs: String.fromCharCode(9827)
 };
 const CARD_WIDTH = 5;
+// MATCH CONSTS
+const MIN_MATCH_LENGTH = 1;
+const MAX_MATCH_LENGTH = 100;
+const POSSIBLE_MOVES = ['hit', 'stay'];
 
 function joinOr(array, delimiter = ', ', outro = 'or') {
   // similar to Array.prototype.join(), but adds additional
@@ -80,6 +85,7 @@ function dealCard(deck) {
 
 function hit(hand, deck) {
   hand[Object.keys(hand)[0]].push(dealCard(deck));
+  console.log(hand);
   return hand;
 }
 
@@ -100,11 +106,13 @@ function dealCards(deck, numCards) {
 }
 
 // I think it's ok?
-function initializeScore(players) {
-  let score = {};
-  players.forEach(player => {
-    score[player] = 0;
-  });
+function initializeScore(matchLength) {
+  let score = {
+    [PLAYERS[0]]: 0,
+    [PLAYERS[1]]: 0,
+    ties: 0,
+    winsNeeded: matchLength
+  };
 
   return score;
 }
@@ -118,29 +126,31 @@ function displayScore(score) {
   console.log('');
 }
 
-function cardImage(card = null) {
+function cardImage(card) {
   let cardArr = [];
-  let [val, suit] = (!card) ? ['',''] : [card[0], SUIT_UTF16[card[1]]];
+  let fill = ' ';
+  let [val, suit] = [card[0], SUIT_UTF[card[1]]];
   let [valPad, suitPad] = [CARD_WIDTH - val.length, (CARD_WIDTH - 1) / 2];
-  let [top, bot, side, fill] = ['_', String.fromCharCode(8254), '|', ' '];
   let valLine = `${val}${fill.repeat(valPad)}`;
   let suitLine = `${fill.repeat(suitPad)}${suit}${fill.repeat(suitPad)}`;
 
   // if card isn't known, replace show backside
-  if (!card) {
+  if (card === 'an unknown card') {
     fill = '/';
     [valLine, suitLine] = [fill.repeat(CARD_WIDTH), fill.repeat(CARD_WIDTH)];
   }
 
-  cardArr[0] = ` ${top.repeat(CARD_WIDTH)} `;
-  cardArr[1] = `${side}${valLine}${side}`;
-  cardArr[2] = `${side}${suitLine}${side}`;
-  cardArr[3] = `${side}${fill.repeat(CARD_WIDTH)}${side}`;
-  cardArr[4] = ` ${bot.repeat(CARD_WIDTH)} `;
+  // card image
+  cardArr[0] = ` ${'_'.repeat(CARD_WIDTH)} `;
+  cardArr[1] = `|${valLine}|`;
+  cardArr[2] = `|${suitLine}|`;
+  cardArr[3] = `|${fill.repeat(CARD_WIDTH)}|`;
+  cardArr[4] = ` ${String.fromCharCode(8254).repeat(CARD_WIDTH)} `;
 
   return cardArr;
 }
 
+// done
 function displaycardImages(cards) {
   let display = [];
   for (let line = 0; line <= 4; line++) {
@@ -154,6 +164,8 @@ function displaycardImages(cards) {
 }
 
 function total(hand) {
+  //this doesn't go well.
+  console.log(hand);
   console.log('hand: ' + hand);
   let player = Object.keys(hand)[0];
   let values = hand[player];
@@ -185,16 +197,31 @@ function busted(hand, deck = [], hitPlayer = false) {
   return (total(hand) > BUST_NUMBER);
 }
 
+// refactor clean card name
 function displayHand(cards, obscure = false) {
-
-  let displayCards = Object.values(cards)[0].map(card => card);
+  let hand = Object.values(cards)[0];
   let player = Object.keys(cards)[0];
 
-  if ((player === CPU_PLAYER) && (obscure)) {
-    displayCards[displayCards.length - 1] = 'unknown card';
+  // obsecure dealer's second card when needed
+  if (obscure) {
+    hand[hand.length - 1] = 'an unknown card';
   }
 
-  console.log(`${player} has: ${joinOr(displayCards,", ","and")}`);
+  let cardImages = hand.map(card => cardImage(card));
+
+  // combine card name and value into clean description
+  let cardNames = hand.map(card => {
+    return (FACE_CARDS[card[0]]) ? [FACE_CARDS[card[0]], card[1]] : card;
+  }).map(card => {
+    return Array.isArray(card) ? card.map(part => capitalize(part)).join(' of ') : card;
+  });
+
+  displaycardImages(cardImages);
+  console.log(`${capitalize(player)} has: ${joinOr(cardNames,", ","and")}.\n`);
+}
+
+function capitalize(word) {
+  return word[0].toUpperCase() + word.slice(1);
 }
 
 function printTitle(title) {
@@ -240,9 +267,77 @@ function getWinner(playerHand, dealerHand) {
   }
 }
 
+// done
+function initializeMatchup() {
+  console.log("MATCH SETUP");
+  console.log("===========\n");
+  let matchLength = Number(getMatchLength());
+  let score = initializeScore(matchLength);
+  console.clear();
+  return score;
+}
+
+// done
+function getMatchLength() {
+  let matchLength = 1;
+  let invalidMsg = "Sorry, that's not a valid choice.  Pick a number between " +
+    ` ${MIN_MATCH_LENGTH} and ${MAX_MATCH_LENGTH}:`;
+
+  console.log(`Match Length: How many games must you win to take the match?`);
+  while (true) {
+    matchLength = Number(readline.question(`=> First to `));
+
+    // verify match length
+    if (matchLength >= MIN_MATCH_LENGTH
+      && matchLength <= MAX_MATCH_LENGTH) break;
+    console.log(invalidMsg);
+  }
+
+  return matchLength;
+}
+
+function hitOrStay() {
+  // let msg =
+  //   (matchWinner) ? 'Start a new match?' : 'Continue to next game?';
+
+  while (true) {
+    console.log("Hit or stay?");
+    let answer = readline.question('=> ').replace(/[^a-z]/,'').toLowerCase();
+
+    // check if answer contains hit, stay or starts with h or s (after cleaning)
+    let verifiedAnswer = POSSIBLE_MOVES.map(response => {
+      if (response.includes(answer) || answer.includes(response)) return true;
+      else return false;
+    }).some(_ => true);
+
+    // check if answer contains verified response but does not contain
+    // ambiguous response (simultaneously yes and no).
+    if (verifiedAnswer && !(answer.includes('h') && (answer.includes('s')))) {
+      if (answer[0] === 's') {
+        console.log(`\n${capitalize(HUMAN_PLAYER)} stays.\n`);
+        return 'stay';
+      } else if (answer[0] === 'h') {
+        console.log(`\n${capitalize(HUMAN_PLAYER)} hits.\n`);
+        return 'stay';
+      }
+    }
+
+    console.log('\nAmbiguous response. Re-enter choice:\n');
+  }
+//////
+
+  // let answer = readline.question('=> ');
+  // // do better job getting hit or stay, check ambiguous.
+  // console.log('');
+
+  // return
+
+  // if (answer === 'stay' || busted(playerHand, deck, true)) break;
+}
+
 //Start Match
 printTitle(GAME_TITLE);
-let score = initializeScore([CPU_PLAYER, HUMAN_PLAYER]);
+let score = initializeMatchup();
 
 while (true) { //Start Individual Game
   let deck = initializeDeck();
@@ -251,18 +346,11 @@ while (true) { //Start Individual Game
 
   while (true) {
 
-    // let blankCard = cardImage();
-    // let card1 = cardImage(['10', 'diamonds']);
-    // let cards = [blankCard, card1];
-    // console.log(displaycardImages(cards));
-    console.log(dealerHand);
+    printTitle(GAME_TITLE);          //
+    displayHand(dealerHand, true);   // make into displayRound at end?
+    displayHand(playerHand);         //
 
-    displayHand(dealerHand, true);
-    displayHand(playerHand);
-
-    // stay seems to be broken
-    console.log("\nHit or stay?");
-    let answer = readline.question('=> ');
+    let answer = hitOrStay();
     console.log('');
 
     if (answer === 'stay' || busted(playerHand, deck, true)) break;
@@ -306,5 +394,4 @@ while (true) { //Start Individual Game
   printTitle(GAME_TITLE);
 }
 
-console.log('');
-console.log(`Thanks for playing ${GAME_TITLE}!`);
+console.log(`\nThanks for playing ${GAME_TITLE}!`);
