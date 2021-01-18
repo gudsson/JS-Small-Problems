@@ -9,14 +9,18 @@ const DEALER_HITS_UNTIL = 17;
 const HUMAN_PLAYER = 'player';
 const CPU_PLAYER = 'dealer';
 const PLAYERS = [CPU_PLAYER, HUMAN_PLAYER];
-const CARD_SUITS = ['hearts', 'diamonds', 'spades', 'clubs'];
+const CARD_SUITS = [
+  'hearts',
+  'diamonds',
+  'spades',
+  'clubs'
+];
 const FACE_CARDS = {
   J: 'Jack',
   Q: 'Queen',
   K: 'King',
   A: 'Ace',
 };
-// get from TTT
 const PLAY_AGAIN_RESPONSES = ['yes', 'no'];
 const SUIT_UTF = {
   hearts: String.fromCharCode(9829),
@@ -30,6 +34,9 @@ const MIN_MATCH_LENGTH = 1;
 const MAX_MATCH_LENGTH = 100;
 const POSSIBLE_MOVES = ['hit', 'stay'];
 
+let score = initializeMatchup();
+
+// done
 function joinOr(array, delimiter = ', ', outro = 'or') {
   // similar to Array.prototype.join(), but adds additional
   // outro word before last element in array instead of last comma
@@ -85,7 +92,6 @@ function dealCard(deck) {
 
 function hit(hand, deck) {
   hand[Object.keys(hand)[0]].push(dealCard(deck));
-  console.log(hand);
   return hand;
 }
 
@@ -94,7 +100,7 @@ function prompt(text) {
   console.log(`=> ${text}`);
 }
 
-// i think it's ok?
+// done
 function dealCards(deck, numCards) {
   let cards = [];
 
@@ -105,7 +111,7 @@ function dealCards(deck, numCards) {
   return cards;
 }
 
-// I think it's ok?
+// done
 function initializeScore(matchLength) {
   let score = {
     [PLAYERS[0]]: 0,
@@ -118,12 +124,52 @@ function initializeScore(matchLength) {
 }
 
 // get best-of-n functionality from TTT
+// function displayScore(score) {
+//   console.log(`Current Score:`);
+//   Object.keys(score).forEach(player => {
+//     console.log(`   ${player} Wins:   ${score[player]}`);
+//   });
+//   console.log('');
+// }
+
 function displayScore(score) {
-  console.log(`Current Score:`);
-  Object.keys(score).forEach(player => {
-    console.log(`   ${player} Wins:   ${score[player]}`);
-  });
-  console.log('');
+  let gamesPlayed = Object.keys(score).reduce((tot, val) => {
+    return (val !== 'winsNeeded') ? tot + score[val] : tot;
+  }, 0);
+  let title = `Game ${gamesPlayed + 1}: Current Score`;
+
+  // scoreboard title line
+  console.log(`${title}\n${'='.repeat(title.length)}`);
+
+  // let colonPosition = title.length
+  //   + Math.max(...PLAYERS.map(name => name.length)) + 2;
+  // let padding = [
+  //   ' '.repeat(colonPosition - PLAYERS[0].length - title.length),
+  //   ' '.repeat(colonPosition - PLAYERS[1].length - title.length),
+  //   ' '.repeat(colonPosition - 'Ties'.length)
+  // ];
+
+  // Scoreboard Line 1
+  console.log(`${capitalize(PLAYERS[0])}:   `
+    + `${score[PLAYERS[0]]} ${pluralize('win', score[PLAYERS[0]])}`);
+
+  // Scoreboard Line 2
+  console.log(`${capitalize(PLAYERS[1])}:   `
+    + `${score[PLAYERS[1]]} ${pluralize('win', score[PLAYERS[1]])}`);
+
+  // Scoreboard Line 3
+  if (score.ties > 0) {
+    console.log(`Ties:   `
+    + `${score.ties} ${pluralize('tie', score.ties)}\n`);
+  } else {
+    console.log('');
+  }
+
+}
+
+function pluralize(result, score) {
+  if (score !== 1) return result + 's';
+  else return result;
 }
 
 function cardImage(card) {
@@ -164,9 +210,6 @@ function displaycardImages(cards) {
 }
 
 function total(hand) {
-  //this doesn't go well.
-  console.log(hand);
-  console.log('hand: ' + hand);
   let player = Object.keys(hand)[0];
   let values = hand[player];
   let sum = 0;
@@ -199,7 +242,7 @@ function busted(hand, deck = [], hitPlayer = false) {
 
 // refactor clean card name
 function displayHand(cards, obscure = false) {
-  let hand = Object.values(cards)[0];
+  let hand = Object.values(cards)[0].slice();
   let player = Object.keys(cards)[0];
 
   // obsecure dealer's second card when needed
@@ -211,19 +254,22 @@ function displayHand(cards, obscure = false) {
 
   // combine card name and value into clean description
   let cardNames = hand.map(card => {
+    // if face card letter, get full card name
     return (FACE_CARDS[card[0]]) ? [FACE_CARDS[card[0]], card[1]] : card;
   }).map(card => {
+    // capitalize words in card names
     return Array.isArray(card) ? card.map(part => capitalize(part)).join(' of ') : card;
   });
 
   displaycardImages(cardImages);
-  console.log(`${capitalize(player)} has: ${joinOr(cardNames,", ","and")}.\n`);
+  console.log(`${capitalize(player)} has: ${joinOr(cardNames,", ","and")}.\n\n`);
 }
 
 function capitalize(word) {
   return word[0].toUpperCase() + word.slice(1);
 }
 
+// done
 function printTitle(title) {
   let titleStr = ` Welcome to ${title} `;
 
@@ -236,19 +282,22 @@ function printTitle(title) {
   return null;
 }
 
+// done but double check when testing
 function playAgain() {
   while (true) {
     console.log('Play again? (y or n)');
-    let answer = readline.question().toLowerCase();
+    let answer = readline.question(`=> `).toLowerCase();
     let verifiedAnswer = PLAY_AGAIN_RESPONSES.map(response => {
-      if (response.includes(answer) || answer.includes(response)) {
-        return true;
-      } else return false;
+      return response.includes(answer) || answer.includes(response);
     }).some(_ => true);
 
     if (verifiedAnswer) {
-      if (answer[0] === 'n') return false;
-      if (answer[0] === 'y') return true;
+      if (answer[0] === 'n') {
+        return false;
+      }
+      if (answer[0] === 'y') {
+        return true;
+      }
     }
 
     console.log('Ambiguous response. Re-enter choice:');
@@ -269,6 +318,8 @@ function getWinner(playerHand, dealerHand) {
 
 // done
 function initializeMatchup() {
+  console.clear();
+  printTitle(GAME_TITLE);
   console.log("MATCH SETUP");
   console.log("===========\n");
   let matchLength = Number(getMatchLength());
@@ -297,17 +348,13 @@ function getMatchLength() {
 }
 
 function hitOrStay() {
-  // let msg =
-  //   (matchWinner) ? 'Start a new match?' : 'Continue to next game?';
-
   while (true) {
     console.log("Hit or stay?");
     let answer = readline.question('=> ').replace(/[^a-z]/,'').toLowerCase();
 
     // check if answer contains hit, stay or starts with h or s (after cleaning)
     let verifiedAnswer = POSSIBLE_MOVES.map(response => {
-      if (response.includes(answer) || answer.includes(response)) return true;
-      else return false;
+      return response.includes(answer) || answer.includes(response);
     }).some(_ => true);
 
     // check if answer contains verified response but does not contain
@@ -318,26 +365,34 @@ function hitOrStay() {
         return 'stay';
       } else if (answer[0] === 'h') {
         console.log(`\n${capitalize(HUMAN_PLAYER)} hits.\n`);
-        return 'stay';
+        return 'hit';
       }
     }
-
     console.log('\nAmbiguous response. Re-enter choice:\n');
   }
-//////
+}
 
-  // let answer = readline.question('=> ');
-  // // do better job getting hit or stay, check ambiguous.
-  // console.log('');
+function pause(milliseconds) {
+  let startTime = new Date().getTime();
+  for (let idx = 0; idx < Number.MAX_SAFE_INTEGER; idx++) {
+    if (milliseconds < (new Date().getTime() - startTime)) {
+      break;
+    }
+  }
+}
 
-  // return
+function printGameboard(cpuHand, humanHand, obscure = false) {
+  console.clear();
+  printTitle(GAME_TITLE);
+  displayScore(score);
+  // // add game number and score here //
+  displayHand(cpuHand, obscure);
+  displayHand(humanHand);
 
-  // if (answer === 'stay' || busted(playerHand, deck, true)) break;
 }
 
 //Start Match
 printTitle(GAME_TITLE);
-let score = initializeMatchup();
 
 while (true) { //Start Individual Game
   let deck = initializeDeck();
@@ -345,47 +400,49 @@ while (true) { //Start Individual Game
   let playerHand = { [HUMAN_PLAYER]: dealCards(deck, 2)};
 
   while (true) {
-
-    printTitle(GAME_TITLE);          //
-    displayHand(dealerHand, true);   // make into displayRound at end?
-    displayHand(playerHand);         //
+    printGameboard(dealerHand, playerHand, true);
+    // let pause = readline.question();
+    // printTitle(GAME_TITLE);          //
+    // // add game number and score here //
+    // displayHand(dealerHand, true);   // make into displayRound at end?
+    // displayHand(playerHand);         //
 
     let answer = hitOrStay();
-    console.log('');
 
-    if (answer === 'stay' || busted(playerHand, deck, true)) break;
+    if (answer === 'stay' || busted(playerHand, deck, true)) break; //get rid of the hit here
   }
 
   if (busted(playerHand)) {
-    displayHand(playerHand);
-    console.log(`Bust! ${HUMAN_PLAYER} has ${total(playerHand)}.`);
-    console.log(`${CPU_PLAYER} wins.\n`);
+    printGameboard(dealerHand, playerHand);
+    console.log(`Bust! ${capitalize(HUMAN_PLAYER)} has ${total(playerHand)}.`);
+    console.log(`${capitalize(CPU_PLAYER)} wins.\n`);
     score[CPU_PLAYER] += 1;
   } else {
 
     while (total(dealerHand) <= DEALER_HITS_UNTIL) {
-      displayHand(dealerHand);
+      printGameboard(dealerHand, playerHand);
+      console.log(`${capitalize(CPU_PLAYER)} has ${total(dealerHand)}.\n`);
+      console.log(`...Dealer's turn...`);
+      pause(1500);
       if (busted(dealerHand, deck, true)) break;
-      displayHand(dealerHand);
-      console.log(`${CPU_PLAYER} has ${total(dealerHand)}.\n`);
     }
 
-    displayHand(dealerHand);
-
     if (busted(dealerHand)) {
-      console.log(`Bust! ${CPU_PLAYER} has ${total(dealerHand)}.`);
-      console.log(`${HUMAN_PLAYER} wins.\n`);
+      printGameboard(dealerHand, playerHand);
+      console.log(`Bust! ${capitalize(CPU_PLAYER)} has ${total(dealerHand)}.`);
+      console.log(`${capitalize(HUMAN_PLAYER)} wins.\n`);
       score[HUMAN_PLAYER] += 1;
     } else if (someoneWon(playerHand, dealerHand)) {
       let winner = getWinner(playerHand, dealerHand);
       let scores = [total(playerHand), total(dealerHand)];
       scores.sort((a, b) => b - a);
 
-      console.log(`${winner} wins (${scores[0]} to ${scores[1]}).\n`);
+      console.log(`${capitalize(winner)} wins (${scores[0]} to ${scores[1]}).\n`);
 
       score[winner] += 1;
     } else {
-      console.log(`It's a tie.\n`);
+      score.ties += 1;
+      console.log(`It's a push (tie).\n`);
     }
   }
 
