@@ -29,7 +29,6 @@ const SUIT_UTF = {
   spades: String.fromCharCode(9824),
   clubs: String.fromCharCode(9827)
 };
-const CARD_WIDTH = 5;
 const MIN_MATCH_LENGTH = 1;
 const MAX_MATCH_LENGTH = 100;
 const PAUSE_LENGTH = 1000;
@@ -170,10 +169,10 @@ function dealCards(deck, numCards = 1) {
 }
 
 function cardImage(card) {
+  const CARD_WIDTH = 5;
   let cardArr = [];
-  let fill = ' ';
   let [val, suit] = [card[0], SUIT_UTF[card[1]]];
-  let [valPad, suitPad] = [CARD_WIDTH - val.length, (CARD_WIDTH - 1) / 2];
+  let [valPad, suitPad, fill] = [CARD_WIDTH - val.length, (CARD_WIDTH - 1) / 2, ' '];
   let valLine = `${val}${fill.repeat(valPad)}`;
   let suitLine = `${fill.repeat(suitPad)}${suit}${fill.repeat(suitPad)}`;
 
