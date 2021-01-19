@@ -292,8 +292,8 @@ function joinOr(array, delimiter = ', ', outro = 'or') {
   }).join(delimiter).trim();
 }
 
-function pluralize(result, score) {
-  if (score !== 1) return result + 's';
+function pluralize(result, scoreCount) {
+  if (scoreCount !== 1) return result + 's';
   else return result;
 }
 
