@@ -22,6 +22,7 @@ const FACE_CARDS = {
   A: 'Ace',
 };
 const PLAY_AGAIN_RESPONSES = ['yes', 'no'];
+const POSSIBLE_MOVES = ['hit', 'stay'];
 const SUIT_UTF = {
   hearts: String.fromCharCode(9829),
   diamonds: String.fromCharCode(9830),
@@ -29,30 +30,101 @@ const SUIT_UTF = {
   clubs: String.fromCharCode(9827)
 };
 const CARD_WIDTH = 5;
-// MATCH CONSTS
 const MIN_MATCH_LENGTH = 1;
 const MAX_MATCH_LENGTH = 100;
-const POSSIBLE_MOVES = ['hit', 'stay'];
+const PAUSE_LENGTH = 1000;
 
 let score = initializeMatchup();
 
-// done
-function joinOr(array, delimiter = ', ', outro = 'or') {
-  // similar to Array.prototype.join(), but adds additional
-  // outro word before last element in array instead of last comma
-  if (array.length < 3) {
-    delimiter = ' ';
-    if (array.length < 2) outro = '';
-  }
+function printTitle(title, intro = false) {
+  let titleIntro = (intro) ? 'WELCOME TO ' : '';
+  let titleStr = `   ${titleIntro}${title.toUpperCase()}!   `;
 
-  return array.map((value, idx) => {
-    if (idx === array.length - 1) {
-      return `${outro} ${value}`;
-    } else return value;
-  }).join(delimiter).trim();
+  console.clear();
+  console.log(`+${'-'.repeat(titleStr.length)}+`);
+  console.log(`|${titleStr}|`);
+  console.log(`+${'-'.repeat(titleStr.length)}+`);
+  console.log('');
+
+  return null;
 }
 
-// done
+function initializeMatchup() {
+  console.clear();
+  printTitle(GAME_TITLE, true);
+  console.log("MATCH SETUP");
+  console.log("===========\n");
+
+  let matchLength = Number(getMatchLength());
+  let initialScore = initializeScore(matchLength);
+  return initialScore;
+}
+
+function getMatchLength() { // get match length from user (best-of-n)
+  let matchLength = 1;
+  let invalidMsg = "Sorry, that's not a valid choice.  Pick a number between " +
+    ` ${MIN_MATCH_LENGTH} and ${MAX_MATCH_LENGTH} and press <enter>:`;
+
+  console.log(`Match Length: How many games must you win to take the match?`);
+  while (true) {
+    matchLength = Number(readline.question(`=> First to `).replace(/[^\d]/g, ''));
+
+    // verify match length
+    if (matchLength >= MIN_MATCH_LENGTH
+      && matchLength <= MAX_MATCH_LENGTH) {
+      break;
+    } else {
+      console.log(invalidMsg);
+    }
+  }
+
+  return matchLength;
+}
+
+function initializeScore(matchLength) {
+  let score = {
+    [CPU_PLAYER]: 0,
+    [HUMAN_PLAYER]: 0,
+    ties: 0,
+    winsNeeded: matchLength
+  };
+
+  return score;
+}
+
+function displayScore(printScore = true) {
+  if (printScore) {
+    let title = `Current Score`;
+    let colonPos = title.length + Math.max(...PLAYERS.map(name => {
+      return name.length;
+    })) + 2;
+    let pad = [
+      ' '.repeat(colonPos - CPU_PLAYER.length - title.length),
+      ' '.repeat(colonPos - HUMAN_PLAYER.length - title.length),
+      ' '.repeat(colonPos - 'Ties'.length)
+    ];
+
+    // Scoreboard Line 1
+    console.log(`${title}${pad[0]}${scoreline(CPU_PLAYER)}`);
+
+    // Scoreboard Line 2
+    console.log(`${'='.repeat(title.length)}${pad[1]}${scoreline(HUMAN_PLAYER)}`);
+
+    // Scoreboard Line 3
+    console.log((score.ties > 0) ? `${pad[2]}${scoreline('ties')}\n` : '');
+  }
+  return null;
+}
+
+function scoreline(resultLookup) {
+  let resultType = (resultLookup === 'ties') ? 'tie' : 'win';
+  let winMarker = (resultLookup !== 'ties' && score[resultLookup] === score.winsNeeded)
+    ? '  <== WINNER' : '';
+  let text = `${capitalize(resultLookup)}:   `
+  + `${score[resultLookup]} ${pluralize(resultType, score[resultLookup])}${winMarker}`;
+  return text;
+}
+
 function buildDeck() {
   let deck = [];
 
@@ -68,7 +140,6 @@ function buildDeck() {
   return deck;
 }
 
-// done
 function shuffle(deck) {
   let shuffledDeck = [];
 
@@ -80,28 +151,15 @@ function shuffle(deck) {
   return shuffledDeck;
 }
 
-// done
 function initializeDeck() {
   return shuffle(buildDeck());
 }
 
-// done
 function dealCard(deck) {
   return deck.shift();
 }
 
-function hit(hand, deck) {
-  hand[Object.keys(hand)[0]].push(dealCard(deck));
-  return hand;
-}
-
-// get rid of? use differently?
-function prompt(text) {
-  console.log(`=> ${text}`);
-}
-
-// done
-function dealCards(deck, numCards) {
+function dealCards(deck, numCards = 1) {
   let cards = [];
 
   for (let idx = 0; idx < numCards; idx += 1) {
@@ -109,67 +167,6 @@ function dealCards(deck, numCards) {
   }
 
   return cards;
-}
-
-// done
-function initializeScore(matchLength) {
-  let score = {
-    [PLAYERS[0]]: 0,
-    [PLAYERS[1]]: 0,
-    ties: 0,
-    winsNeeded: matchLength
-  };
-
-  return score;
-}
-
-// get best-of-n functionality from TTT
-// function displayScore(score) {
-//   console.log(`Current Score:`);
-//   Object.keys(score).forEach(player => {
-//     console.log(`   ${player} Wins:   ${score[player]}`);
-//   });
-//   console.log('');
-// }
-
-function displayScore(score) {
-  let gamesPlayed = Object.keys(score).reduce((tot, val) => {
-    return (val !== 'winsNeeded') ? tot + score[val] : tot;
-  }, 0);
-  let title = `Game ${gamesPlayed + 1}: Current Score`;
-
-  // scoreboard title line
-  console.log(`${title}\n${'='.repeat(title.length)}`);
-
-  // let colonPosition = title.length
-  //   + Math.max(...PLAYERS.map(name => name.length)) + 2;
-  // let padding = [
-  //   ' '.repeat(colonPosition - PLAYERS[0].length - title.length),
-  //   ' '.repeat(colonPosition - PLAYERS[1].length - title.length),
-  //   ' '.repeat(colonPosition - 'Ties'.length)
-  // ];
-
-  // Scoreboard Line 1
-  console.log(`${capitalize(PLAYERS[0])}:   `
-    + `${score[PLAYERS[0]]} ${pluralize('win', score[PLAYERS[0]])}`);
-
-  // Scoreboard Line 2
-  console.log(`${capitalize(PLAYERS[1])}:   `
-    + `${score[PLAYERS[1]]} ${pluralize('win', score[PLAYERS[1]])}`);
-
-  // Scoreboard Line 3
-  if (score.ties > 0) {
-    console.log(`Ties:   `
-    + `${score.ties} ${pluralize('tie', score.ties)}\n`);
-  } else {
-    console.log('');
-  }
-
-}
-
-function pluralize(result, score) {
-  if (score !== 1) return result + 's';
-  else return result;
 }
 
 function cardImage(card) {
@@ -196,7 +193,6 @@ function cardImage(card) {
   return cardArr;
 }
 
-// done
 function displaycardImages(cards) {
   let display = [];
   for (let line = 0; line <= 4; line++) {
@@ -209,147 +205,105 @@ function displaycardImages(cards) {
   display.forEach(line => console.log(line));
 }
 
-function total(hand) {
-  let player = Object.keys(hand)[0];
-  let values = hand[player];
-  let sum = 0;
+function hit(hand, deck) {
+  hand.push(dealCard(deck));
+  return hand;
+}
 
-  values.forEach(value => {
-    if (value[0] === "A") {
-      sum += 11;
-      // no me gusta
-    } else if (['J', 'Q', 'K'].includes(value[0])) {
-      sum += 10;
-    } else {
-      sum += Number(value[0]);
+function busted(handValue) {
+  return handValue > BUST_NUMBER;
+}
+
+function totalHandValue(hand) {
+  let aceCount = hand.filter(card => card[0] === 'A').length;
+
+  // Do math
+  let cardValues = hand.map(card => getCardValue(card[0]));
+  let total = cardValues.reduce((total, val) => total + val, 0);
+
+  // Correct for Aces
+  while (aceCount > 0 && total > BUST_NUMBER) {
+    total -= 10;
+    aceCount -= 1;
+  }
+
+  return total;
+}
+
+function displayHands(cards, cardValues, obscure = false) {
+  let players = Object.keys(cards);
+
+  // loop over player hands
+  players.forEach(player => {
+    let hand = cards[player].slice();
+    let total = cardValues[player];
+    let totalIntro = 'Total of';
+
+    // hide holeCard
+    if (obscure && player === CPU_PLAYER) {
+      let holeCard = hand[hand.length - 1];
+      total -= getCardValue(holeCard[0]);
+      totalIntro = `Showing`;
+      hand[hand.length - 1] = 'an unknown card';
     }
-  });
 
-  // correct for Aces
-  values.filter(value => value[0] === "A").forEach(_ => {
-    if (sum > BUST_NUMBER) sum -= 10;
-  });
+    // get and display card images
+    let cardImages = hand.map(card => cardImage(card));
+    displaycardImages(cardImages);
 
-  return sum;
+    // Display text summary of hand
+    console.log(`${capitalize(player)} has: ${describeCards(hand)} (${totalIntro} ${total}).\n\n`);
+  });
 }
 
-function busted(hand, deck = [], hitPlayer = false) {
-  if (hitPlayer) {
-    hit(hand, deck);
-  }
-  return (total(hand) > BUST_NUMBER);
-}
-
-// refactor clean card name
-function displayHand(cards, obscure = false) {
-  let hand = Object.values(cards)[0].slice();
-  let player = Object.keys(cards)[0];
-
-  // obsecure dealer's second card when needed
-  if (obscure) {
-    hand[hand.length - 1] = 'an unknown card';
-  }
-
-  let cardImages = hand.map(card => cardImage(card));
-
-  // combine card name and value into clean description
+function describeCards(hand) {
+  // (ie ['K', 'hearts'] to 'King of Hearts'
   let cardNames = hand.map(card => {
-    // if face card letter, get full card name
     return (FACE_CARDS[card[0]]) ? [FACE_CARDS[card[0]], card[1]] : card;
   }).map(card => {
     // capitalize words in card names
     return Array.isArray(card) ? card.map(part => capitalize(part)).join(' of ') : card;
   });
 
-  displaycardImages(cardImages);
-  console.log(`${capitalize(player)} has: ${joinOr(cardNames,", ","and")}.\n\n`);
+  return joinOr(cardNames,", ","and");
+}
+
+function getCardValue(cardRank) {
+  switch (true) {
+    case cardRank === "A":
+      return 11;
+    case ['J', 'Q', 'K'].includes(cardRank):
+      return 10;
+    default:
+      return Number(cardRank);
+  }
+}
+
+function joinOr(array, delimiter = ', ', outro = 'or') {
+  if (array.length < 3) {
+    delimiter = ' ';
+    if (array.length < 2) outro = '';
+  }
+
+  return array.map((value, idx) => {
+    if (idx === array.length - 1) {
+      return `${outro} ${value}`;
+    } else return value;
+  }).join(delimiter).trim();
+}
+
+function pluralize(result, score) {
+  if (score !== 1) return result + 's';
+  else return result;
 }
 
 function capitalize(word) {
   return word[0].toUpperCase() + word.slice(1);
 }
 
-// done
-function printTitle(title) {
-  let titleStr = ` Welcome to ${title} `;
-
-  console.clear();
-  console.log(`+${'-'.repeat(titleStr.length)}+`);
-  console.log(`|${titleStr}|`);
-  console.log(`+${'-'.repeat(titleStr.length)}+`);
-  console.log('');
-
-  return null;
-}
-
-// done but double check when testing
-function playAgain() {
+function playerResponse() {
   while (true) {
-    console.log('Play again? (y or n)');
-    let answer = readline.question(`=> `).toLowerCase();
-    let verifiedAnswer = PLAY_AGAIN_RESPONSES.map(response => {
-      return response.includes(answer) || answer.includes(response);
-    }).some(_ => true);
-
-    if (verifiedAnswer) {
-      if (answer[0] === 'n') {
-        return false;
-      }
-      if (answer[0] === 'y') {
-        return true;
-      }
-    }
-
-    console.log('Ambiguous response. Re-enter choice:');
-  }
-}
-
-function someoneWon(playerHand, dealerHand) {
-  return (total(playerHand) !== total(dealerHand));
-}
-
-function getWinner(playerHand, dealerHand) {
-  if (total[playerHand] > total[dealerHand]) {
-    return HUMAN_PLAYER;
-  } else {
-    return CPU_PLAYER;
-  }
-}
-
-// done
-function initializeMatchup() {
-  console.clear();
-  printTitle(GAME_TITLE);
-  console.log("MATCH SETUP");
-  console.log("===========\n");
-  let matchLength = Number(getMatchLength());
-  let score = initializeScore(matchLength);
-  console.clear();
-  return score;
-}
-
-// done
-function getMatchLength() {
-  let matchLength = 1;
-  let invalidMsg = "Sorry, that's not a valid choice.  Pick a number between " +
-    ` ${MIN_MATCH_LENGTH} and ${MAX_MATCH_LENGTH}:`;
-
-  console.log(`Match Length: How many games must you win to take the match?`);
-  while (true) {
-    matchLength = Number(readline.question(`=> First to `));
-
-    // verify match length
-    if (matchLength >= MIN_MATCH_LENGTH
-      && matchLength <= MAX_MATCH_LENGTH) break;
-    console.log(invalidMsg);
-  }
-
-  return matchLength;
-}
-
-function hitOrStay() {
-  while (true) {
-    console.log("Hit or stay?");
+    console.log(`${capitalize(HUMAN_PLAYER)}: Do you want to hit (h) or stay (s)?`);
     let answer = readline.question('=> ').replace(/[^a-z]/,'').toLowerCase();
 
     // check if answer contains hit, stay or starts with h or s (after cleaning)
@@ -357,8 +311,7 @@ function hitOrStay() {
       return response.includes(answer) || answer.includes(response);
     }).some(_ => true);
 
-    // check if answer contains verified response but does not contain
-    // ambiguous response (simultaneously yes and no).
+    // check verified and not simultaneously hit and stay.
     if (verifiedAnswer && !(answer.includes('h') && (answer.includes('s')))) {
       if (answer[0] === 's') {
         console.log(`\n${capitalize(HUMAN_PLAYER)} stays.\n`);
@@ -368,7 +321,7 @@ function hitOrStay() {
         return 'hit';
       }
     }
-    console.log('\nAmbiguous response. Re-enter choice:\n');
+    console.log('\nAmbiguous response. Please type (h) or (s) and press <enter>:\n');
   }
 }
 
@@ -381,74 +334,207 @@ function pause(milliseconds) {
   }
 }
 
-function printGameboard(cpuHand, humanHand, obscure = false) {
+function printBoard(hands, handValues, obscureDealer = false) {
   console.clear();
-  printTitle(GAME_TITLE);
-  displayScore(score);
-  // // add game number and score here //
-  displayHand(cpuHand, obscure);
-  displayHand(humanHand);
-
+  printTitle(`${GAME_TITLE} | FIRST TO ${score.winsNeeded} WINS`);
+  displayScore();
+  displayHands(hands, handValues, obscureDealer);
 }
 
-//Start Match
-printTitle(GAME_TITLE);
+function someoneWonMatch() {
+  return [score[CPU_PLAYER], score[HUMAN_PLAYER]].includes(score.winsNeeded);
+}
 
-while (true) { //Start Individual Game
-  let deck = initializeDeck();
-  let dealerHand = { [CPU_PLAYER]: dealCards(deck, 2)};
-  let playerHand = { [HUMAN_PLAYER]: dealCards(deck, 2)};
+function getMatchWinner() {
+  if (score[HUMAN_PLAYER] === score.winsNeeded) {
+    return HUMAN_PLAYER;
+  } else if (score[CPU_PLAYER] === score.winsNeeded) {
+    return CPU_PLAYER;
+  }
+  return null;
+}
+
+function printCountdown(count, move) {
+  console.log(`...Dealer's turn...\n`);
+  pause(PAUSE_LENGTH);
+  for (let idx = count; idx >= 1; idx--) {
+    process.stdout.write(String(idx) + '...');
+    pause(PAUSE_LENGTH);
+  }
+  process.stdout.write(`Dealer ${capitalize(move)}s.\n`);
+  pause(PAUSE_LENGTH);
+  return null;
+}
+
+function playerTurn(hands, handValues, deck) {
+  let hand = hands[HUMAN_PLAYER];
 
   while (true) {
-    printGameboard(dealerHand, playerHand, true);
-    // let pause = readline.question();
-    // printTitle(GAME_TITLE);          //
-    // // add game number and score here //
-    // displayHand(dealerHand, true);   // make into displayRound at end?
-    // displayHand(playerHand);         //
+    printBoard(hands, handValues, true);
 
-    let answer = hitOrStay();
+    let answer = playerResponse();
 
-    if (answer === 'stay' || busted(playerHand, deck, true)) break; //get rid of the hit here
-  }
+    if (answer === 'stay') {
+      return false;
+    } else { // else hit player and check for bust
+      handValues[HUMAN_PLAYER] = totalHandValue(hit(hand, deck));
 
-  if (busted(playerHand)) {
-    printGameboard(dealerHand, playerHand);
-    console.log(`Bust! ${capitalize(HUMAN_PLAYER)} has ${total(playerHand)}.`);
-    console.log(`${capitalize(CPU_PLAYER)} wins.\n`);
-    score[CPU_PLAYER] += 1;
-  } else {
-
-    while (total(dealerHand) <= DEALER_HITS_UNTIL) {
-      printGameboard(dealerHand, playerHand);
-      console.log(`${capitalize(CPU_PLAYER)} has ${total(dealerHand)}.\n`);
-      console.log(`...Dealer's turn...`);
-      pause(1500);
-      if (busted(dealerHand, deck, true)) break;
-    }
-
-    if (busted(dealerHand)) {
-      printGameboard(dealerHand, playerHand);
-      console.log(`Bust! ${capitalize(CPU_PLAYER)} has ${total(dealerHand)}.`);
-      console.log(`${capitalize(HUMAN_PLAYER)} wins.\n`);
-      score[HUMAN_PLAYER] += 1;
-    } else if (someoneWon(playerHand, dealerHand)) {
-      let winner = getWinner(playerHand, dealerHand);
-      let scores = [total(playerHand), total(dealerHand)];
-      scores.sort((a, b) => b - a);
-
-      console.log(`${capitalize(winner)} wins (${scores[0]} to ${scores[1]}).\n`);
-
-      score[winner] += 1;
-    } else {
-      score.ties += 1;
-      console.log(`It's a push (tie).\n`);
+      if (busted(handValues[HUMAN_PLAYER])) {
+        return true;
+      }
     }
   }
-
-  displayScore(score);
-  if (!playAgain()) break;
-  printTitle(GAME_TITLE);
 }
 
-console.log(`\nThanks for playing ${GAME_TITLE}!`);
+function dealerTurn(hands, handValues, deck) {
+  let hand = hands[CPU_PLAYER];
+
+  while (totalHandValue(hand) < DEALER_HITS_UNTIL) {
+    printBoard(hands, handValues);
+    printCountdown(3, 'hit');
+
+    // hit dealer and check if busted
+    handValues[CPU_PLAYER] = totalHandValue(hit(hand, deck));
+    if (busted(handValues[CPU_PLAYER])) return null;
+  }
+
+  // if dealer stays
+  printBoard(hands, handValues);
+  printCountdown(3, 'stay');
+
+  return null;
+}
+
+function getGameWinner(handValues) {
+  let playerScore = handValues[HUMAN_PLAYER];
+  let dealerScore = handValues[CPU_PLAYER];
+
+  if (playerScore === dealerScore) return null;
+
+  if (busted(playerScore)) {
+    return CPU_PLAYER;
+  } else if (busted(dealerScore)) {
+    return HUMAN_PLAYER;
+  } else {
+    return (playerScore > dealerScore) ? HUMAN_PLAYER : CPU_PLAYER;
+  }
+}
+
+function updateScore(winner) {
+  if (!winner) {
+    score.ties += 1;
+  } else {
+    score[winner] += 1;
+  }
+  return null;
+}
+
+function displayGameResult(winner, handValues) {
+  let textArr = [];
+
+  if (winner) {
+    let loser = (winner === HUMAN_PLAYER) ? CPU_PLAYER : HUMAN_PLAYER;
+    let [winnerScore, loserScore] = [handValues[winner], handValues[loser]];
+
+    textArr.push(winner === HUMAN_PLAYER ? 'YOU WIN!' : 'YOU LOSE!');
+
+    if (loserScore > BUST_NUMBER) {
+      textArr.push(`\n${capitalize(loser)} BUSTS by exceeding `
+        + `${BUST_NUMBER} with a score of ${loserScore}.`);
+      textArr.push(`\n${capitalize(winner)} wins with a score of ${winnerScore}.`);
+    } else {
+      textArr.push(`\n${capitalize(winner)} wins by a score of `
+        + `${winnerScore} to ${loserScore}!`);
+    }
+  } else {
+    textArr.push(`Push! Game ends in a draw (Total of ${handValues[CPU_PLAYER]} a piece).`);
+  }
+
+  printArrayWithBoarders(textArr);
+  return null;
+}
+
+function printArrayWithBoarders(textArr) {
+  let maxLength = textArr.slice().sort((a, b) => {
+    return (b.length - a.length);
+  })[0].length;
+
+  let border = '='.repeat(maxLength);
+
+  textArr = [...[border], ...textArr, ...[border]];
+  textArr.forEach(line => console.log(line));
+
+  return null;
+}
+
+function displayMatchResult(winner) {
+  let exclamation = (winner === HUMAN_PLAYER) ? 'CONGRATULATIONS' : 'SORRY';
+  let loser = (winner === HUMAN_PLAYER) ? CPU_PLAYER : HUMAN_PLAYER;
+
+  console.log(`\n***${exclamation}***`);
+  console.log(`\n${capitalize(winner)} is first to ${score.winsNeeded} and wins the match `
+    + `${score[winner]} ${pluralize('game', score[winner])} to ${score[loser]}.`);
+}
+
+function playAgain(matchWinner = null) {
+  let msg =
+    (matchWinner) ? '\nStart a new match?' : '\nContinue to next game?';
+
+  while (true) {
+    console.log(`${msg} (y or n)`);
+    let answer = readline.question(`=> `).toLowerCase();
+
+    // check if answer contains y, n, yes or no (after cleaning)
+    let verifiedAnswer = PLAY_AGAIN_RESPONSES.map(response => {
+      return response.includes(answer) || answer.includes(response);
+    }).some(_ => true);
+
+    // check if verified and not simultaneously yes and no.
+    if (verifiedAnswer
+      && !(answer.includes('y') && (answer.includes('n')))) {
+      if (answer[0] === 'n') return false;
+      if (answer[0] === 'y') return true;
+    }
+
+    console.log('\nAmbiguous response. Re-enter choice:');
+  }
+}
+
+// Start Individual Game
+while (true) {
+  let deck = initializeDeck();
+  let hands = {
+    [CPU_PLAYER]: dealCards(deck, 2),
+    [HUMAN_PLAYER]: dealCards(deck, 2)
+  };
+  let handValues = {
+    [CPU_PLAYER]: totalHandValue(hands[CPU_PLAYER]),
+    [HUMAN_PLAYER]: totalHandValue(hands[HUMAN_PLAYER])
+  };
+
+  // playerTurn returns true if player busts.
+  let playerBusts = playerTurn(hands, handValues, deck);
+
+  // if player doesn't bust, execute dealer's turn(s).
+  if (!playerBusts) {
+    dealerTurn(hands, handValues, deck);
+  }
+
+  // once dealer is done, refresh gameboard and display result
+  let result = getGameWinner(handValues);
+  updateScore(result);
+  printBoard(hands, handValues);
+  displayGameResult(result, handValues);
+
+  // check if current match is over
+  if (someoneWonMatch()) {
+    let matchWinner = getMatchWinner();
+    displayMatchResult(matchWinner);
+
+    if (playAgain(matchWinner)) {
+      score = initializeMatchup();
+    } else break;
+  } else if (!playAgain()) break;
+}
+
+console.log(`\nThanks for playing ${GAME_TITLE}!\n`);
