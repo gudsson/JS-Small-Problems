@@ -33,7 +33,10 @@ const MIN_MATCH_LENGTH = 1;
 const MAX_MATCH_LENGTH = 100;
 const PAUSE_LENGTH = 1000;
 
-let score = initializeMatchup();
+// Begin Matchup
+displayStartupMsg();
+let matchLength = Number(getMatchLength());
+let score = initializeScore(matchLength);
 
 function printTitle(title, intro = false) {
   let titleIntro = (intro) ? 'WELCOME TO ' : '';
@@ -48,15 +51,12 @@ function printTitle(title, intro = false) {
   return null;
 }
 
-function initializeMatchup() {
+function displayStartupMsg() {
   console.clear();
   printTitle(GAME_TITLE, true);
   console.log("MATCH SETUP");
   console.log("===========\n");
-
-  let matchLength = Number(getMatchLength());
-  let initialScore = initializeScore(matchLength);
-  return initialScore;
+  // return null;
 }
 
 function getMatchLength() { // get match length from user (best-of-n)
@@ -293,7 +293,7 @@ function joinOr(array, delimiter = ', ', outro = 'or') {
 
 function pluralize(result, scoreCount) {
   if (scoreCount !== 1) return result + 's';
-  else return result;
+  return result;
 }
 
 function capitalize(word) {
@@ -303,15 +303,14 @@ function capitalize(word) {
 function playerResponse() {
   while (true) {
     console.log(`${capitalize(HUMAN_PLAYER)}: Do you want to hit (h) or stay (s)?`);
-    let answer = readline.question('=> ').replace(/[^a-z]/,'').toLowerCase();
+    let answer = readline.question('=> ').toLowerCase();
 
     // check if answer contains hit, stay or starts with h or s (after cleaning)
-    let verifiedAnswer = POSSIBLE_MOVES.map(response => {
-      return response.includes(answer) || answer.includes(response);
-    }).some(_ => true);
+    let verifiedAnswer = POSSIBLE_MOVES.map(res => res.includes(answer))
+      .some(_ => true) || POSSIBLE_MOVES.map(res => res[0]).includes(answer);
 
     // check verified and not simultaneously hit and stay.
-    if (verifiedAnswer && !(answer.includes('h') && (answer.includes('s')))) {
+    if (verifiedAnswer && !((answer.includes('s')) && (answer.includes('h')))) {
       if (answer[0] === 's') {
         console.log(`\n${capitalize(HUMAN_PLAYER)} stays.\n`);
         return 'stay';
@@ -362,7 +361,6 @@ function printCountdown(count, move) {
   }
   process.stdout.write(`Dealer ${capitalize(move)}s.\n`);
   pause(PAUSE_LENGTH);
-  return null;
 }
 
 function playerTurn(hands, handValues, deck) {
@@ -374,12 +372,12 @@ function playerTurn(hands, handValues, deck) {
     let answer = playerResponse();
 
     if (answer === 'stay') {
-      return false;
+      break;
     } else { // else hit player and check for bust
       handValues[HUMAN_PLAYER] = totalHandValue(hit(hand, deck));
 
       if (busted(handValues[HUMAN_PLAYER])) {
-        return true;
+        break;
       }
     }
   }
@@ -394,14 +392,12 @@ function dealerTurn(hands, handValues, deck) {
 
     // hit dealer and check if busted
     handValues[CPU_PLAYER] = totalHandValue(hit(hand, deck));
-    if (busted(handValues[CPU_PLAYER])) return null;
+    if (busted(handValues[CPU_PLAYER])) break;
   }
 
   // if dealer stays
   printBoard(hands, handValues);
   printCountdown(3, 'stay');
-
-  return null;
 }
 
 function getGameWinner(handValues) {
@@ -481,16 +477,17 @@ function playAgain(matchWinner = null) {
 
   while (true) {
     console.log(`${msg} (y or n)`);
-    let answer = readline.question(`=> `).toLowerCase();
+    let answer = readline.question(`=> `).toLowerCase().trim();
 
     // check if answer contains y, n, yes or no (after cleaning)
     let verifiedAnswer = PLAY_AGAIN_RESPONSES.map(response => {
-      return response.includes(answer) || answer.includes(response);
-    }).some(_ => true);
+      return response.includes(answer);
+    }).some(_ => true) || PLAY_AGAIN_RESPONSES.map(response => {
+      return response[0];
+    }).includes(answer);
 
     // check if verified and not simultaneously yes and no.
-    if (verifiedAnswer
-      && !(answer.includes('y') && (answer.includes('n')))) {
+    if (verifiedAnswer && !((answer.includes('y') && answer.includes('n')))) {
       if (answer[0] === 'n') return false;
       if (answer[0] === 'y') return true;
     }
@@ -506,16 +503,17 @@ while (true) {
     [CPU_PLAYER]: dealCards(deck, 2),
     [HUMAN_PLAYER]: dealCards(deck, 2)
   };
+
   let handValues = {
     [CPU_PLAYER]: totalHandValue(hands[CPU_PLAYER]),
     [HUMAN_PLAYER]: totalHandValue(hands[HUMAN_PLAYER])
   };
 
-  // playerTurn returns true if player busts.
-  let playerBusts = playerTurn(hands, handValues, deck);
+  // player starts
+  playerTurn(hands, handValues, deck);
 
   // if player doesn't bust, execute dealer's turn(s).
-  if (!playerBusts) {
+  if (!busted(handValues[HUMAN_PLAYER])) {
     dealerTurn(hands, handValues, deck);
   }
 
@@ -531,7 +529,9 @@ while (true) {
     displayMatchResult(matchWinner);
 
     if (playAgain(matchWinner)) {
-      score = initializeMatchup();
+      displayStartupMsg();
+      matchLength = Number(getMatchLength());
+      score = initializeScore(matchLength);
     } else break;
   } else if (!playAgain()) break;
 }

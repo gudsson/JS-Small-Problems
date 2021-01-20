@@ -1,8 +1,9 @@
-var uniqueInOrder = function(iterable) {
-  //your code here - remember iterable can be a string or an array
-  if (!Array.isArray(iterable)) iterable = iterable.split("");
-
-  return iterable.filter((val, idx) => val !== iterable[idx + 1]);
+let car = {
+  make: 'Honda',
+  model: 'Civic'
 };
 
-console.log(uniqueInOrder('AAAABBBCCDAABBB'));
+for (let attribute in car) {
+  console.log(attribute);
+  console.log(car[attribute]);
+}
